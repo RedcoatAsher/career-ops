@@ -119,6 +119,8 @@ This system is designed to be customized by YOU (Claude). When the user asks you
 | Searches for new offers | `scan` |
 | Processes pending URLs | `pipeline` |
 | Batch processes offers | `batch` |
+| Uses `--track` or `[track:]` flag | `auto-pipeline` (track flag passed through) |
+| Uses `--persona` or `[persona:]` flag | `auto-pipeline` or `pdf` (persona flag passed through) |
 
 ### CV Source of Truth
 
