@@ -46,7 +46,7 @@ batch/
       ```bash
       claude -p --dangerously-skip-permissions \
         --append-system-prompt-file batch/batch-prompt.md \
-        "Procesa esta oferta. URL: {url}. JD: /tmp/batch-jd-{id}.txt. Report: {num}. ID: {id}. PERSONA: ${CAREER_OPS_PERSONA:-}"
+        "Procesa esta oferta. URL: {url}. JD: /tmp/batch-jd-{id}.txt. Report: {num}. ID: {id}. PERSONA: ${CAREER_OPS_PERSONA:-}. TRACK: ${CAREER_OPS_TRACK:-}"
       ```
    e. Actualizar `batch-state.tsv` (completed/failed + score + report_num)
    f. Log a `logs/{report_num}-{id}.log`
@@ -67,6 +67,7 @@ Opciones:
 - `--parallel N` — N workers en paralelo
 - `--max-retries N` — intentos por oferta (default: 2)
 - `CAREER_OPS_PERSONA=uk` — forzar persona para todos los workers (opcional)
+- `CAREER_OPS_TRACK=builder` — forzar track para todos los workers (opcional)
 
 ## Formato batch-state.tsv
 

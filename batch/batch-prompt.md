@@ -37,6 +37,7 @@ Eres un worker de evaluación de ofertas de empleo for the candidate (read name 
 | `{{DATE}}` | Fecha actual YYYY-MM-DD |
 | `{{ID}}` | ID único de la oferta en batch-input.tsv |
 | `{{PERSONA}}` | Persona ID para usar (vacío = auto-resolver) |
+| `{{TRACK}}` | Track ID para usar (vacío = auto-inferir del JD) |
 
 ---
 
@@ -169,6 +170,7 @@ Donde `{company-slug}` es el nombre de empresa en lowercase, sin espacios, con g
 **Score:** {X/5}
 **URL:** {URL de la oferta original}
 **Persona:** {PERSONA_ID} ({PERSONA_SOURCE})
+**Track:** {TRACK_ID} ({TRACK_SOURCE})
 **PDF:** career-ops/output/cv-candidate-{company-slug}-{{DATE}}.pdf
 **Batch ID:** {{ID}}
 
@@ -205,6 +207,11 @@ Donde `{company-slug}` es el nombre de empresa en lowercase, sin espacios, con g
    - Si `{{PERSONA}}` vacío + una sola persona definida → auto-seleccionar; anotar como `auto-selected`
    - Si `{{PERSONA}}` vacío + múltiples personas → usar `personas.default` o la primera definida; anotar como `auto-selected` (en batch no se puede interactuar con el usuario)
    - Si no hay sección `personas` → leer de `candidate.phone`, `candidate.location`, `location.visa_status`
+
+0b. Resolver track:
+   - Si `{{TRACK}}` no está vacío → usar `tracks[{{TRACK}}]` de `config/profile.yml`; anotar como `user-specified`
+   - Si `{{TRACK}}` vacío → aplicar reglas de inferencia de `_shared.md` sobre el JD
+   - Si no hay sección `tracks:` en `profile.yml` → omitir toda lógica de track
 
 1. Lee `cv.md` + `i18n.ts`
 2. Extrae 15-20 keywords del JD
