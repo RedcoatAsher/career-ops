@@ -165,6 +165,8 @@ If the candidate has a live demo/dashboard (check profile.yml), offer access in 
 8b. **Case study URLs in PDF Professional Summary:** If the PDF mentions case studies or demos, URLs MUST appear in the first paragraph (Professional Summary). The recruiter may only read the summary. All URLs with `white-space: nowrap` in HTML.
 9. **Tracker additions as TSV** -- NEVER edit applications.md to add new entries. Write TSV in `batch/tracker-additions/` and `merge-tracker.mjs` handles the merge.
 10. **Include `**URL:**` in every report header** -- between Score and PDF.
+11. **Template contact rendering:** When filling `cv-template.html`, if any contact field (`{{PHONE}}`, `{{LOCATION_LINE}}`, `{{AUTHORIZATION}}`) resolves to an empty string or null, omit that `<span>` AND its adjacent `<span class="separator">` from the HTML before writing the file. Never leave orphaned separators.
+12. **Persona field integrity:** ALL contact fields in a generated CV must come from the same persona block. Never mix `phone` from one persona with `location_line` from another.
 
 ### Tools
 
