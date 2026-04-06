@@ -66,12 +66,6 @@ location:
   # For remote roles outside your country:
   # onsite_availability: "1 week/month in any city"
 
-# ── NEW: feature flags ──────────────────────────────────────────────────────
-# Set to false to disable a feature and fall back to current single-profile behavior.
-features:
-  profile_tracks: false    # set true to enable multi-track CV generation
-  personas: false          # set true to enable persona/contact variants
-
 # ── NEW: profile tracks ─────────────────────────────────────────────────────
 # Tracks let you foreground different slices of your experience depending on
 # the role type. Each track has its own headline, summary framing, and a set
