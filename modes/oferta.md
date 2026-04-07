@@ -2,7 +2,34 @@
 
 Cuando el candidato pega una oferta (texto o URL), entregar SIEMPRE los 6 bloques:
 
-## Paso 0 — Detección de Arquetipo
+## Paso 0 — Resolver Track y Persona
+
+Antes de analizar el JD, resolver el track y la persona:
+
+**Track:**
+1. Escanear el mensaje del usuario en busca de señal de track (en orden de prioridad):
+   - `--track <id>` en cualquier parte del mensaje
+   - `[track:<id>]` en cualquier parte del mensaje
+   - Lenguaje natural: "usa el track X", "track de liderazgo", "perfil builder"
+2. Si se encontró señal → anotar como `user-specified`
+3. Si no → extraer el JD primero, luego aplicar las reglas de inferencia de `_shared.md`
+4. Si no hay sección `tracks:` en `profile.yml` → marcar como `no-tracks` y omitir toda lógica de track
+
+Guardar: `TRACK_ID`, `TRACK_SOURCE` para usar en Block E.
+
+**Persona:**
+1. Escanear el mensaje del usuario en busca de señal de persona (en orden de prioridad):
+   - `--persona <id>` en cualquier parte del mensaje
+   - `[persona:<id>]` en cualquier parte del mensaje
+   - Lenguaje natural: "usa mi contacto X", "persona X"
+2. Si se encontró señal → usar `personas[id]` de `config/profile.yml`; anotar como `user-specified`
+3. Si no hay señal + solo hay una persona definida → usar esa; anotar como `auto-selected`
+4. Si no hay señal + hay múltiples personas definidas → preguntar al usuario antes de continuar; anotar como `prompted`
+5. Si no hay sección `personas` en `profile.yml` → usar `candidate.phone`, `candidate.location`, `location.visa_status`
+
+Guardar: `PERSONA_ID`, `PERSONA_SOURCE` para incluir en el header del report.
+
+## Paso 1 — Detección de Arquetipo
 
 Clasificar la oferta en uno de los 6 arquetipos (ver `_shared.md`). Si es híbrido, indicar los 2 más cercanos. Esto determina:
 - Qué proof points priorizar en bloque B

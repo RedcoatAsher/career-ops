@@ -18,7 +18,16 @@ Antes de extraer el JD, resolver el track y la persona que se usarán en toda la
 Guardar: `TRACK_ID`, `TRACK_SOURCE` para pasar a los pasos siguientes.
 
 **Persona:**
-(misma lógica que ya existe en `modes/pdf.md` Paso 0 — resolver aquí para que oferta y pdf usen el mismo valor)
+1. Escanear el mensaje del usuario en busca de señal de persona (en orden de prioridad):
+   - `--persona <id>` en cualquier parte del mensaje
+   - `[persona:<id>]` en cualquier parte del mensaje
+   - Lenguaje natural: "usa mi contacto X", "persona X", "aplica como X"
+2. Si se encontró señal → usar `personas[id]` de `config/profile.yml`; anotar como `user-specified`
+3. Si no hay señal + solo hay una persona definida → usar esa; anotar como `auto-selected`
+4. Si no hay señal + hay múltiples personas definidas → preguntar al usuario antes de continuar; anotar como `prompted`
+5. Si no hay sección `personas` en `profile.yml` → leer de `candidate.phone`, `candidate.location`, `location.visa_status` (fallback bootstrap)
+
+Guardar: `PERSONA_ID`, `PERSONA_LABEL`, `PERSONA_SOURCE` (user-specified | auto-selected | prompted) para pasar a los pasos siguientes.
 
 ## Paso 1 — Extraer JD
 

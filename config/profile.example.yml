@@ -5,7 +5,7 @@
 candidate:
   full_name: "Jane Smith"
   email: "jane@example.com"
-  phone: "+1-555-0123"
+  phone: "+1 (310) 555-0123"
   location: "San Francisco, CA"
   linkedin: "linkedin.com/in/janesmith"
   portfolio_url: "https://janesmith.dev"
@@ -131,7 +131,7 @@ personas:
 
   primary:
     label: "Primary"
-    phone: "+1-555-0123"
+    phone: "+1 (310) 555-0123"
     location_line: "San Francisco, CA"
     address_display: "San Francisco, United States"
     timezone: "PST (UTC-8)"
