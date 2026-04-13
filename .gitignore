@@ -18,6 +18,11 @@ jds/*
 # User config
 config/profile.yml
 portals.yml
+cv.md
+data/applications-us.md
+
+# Claude Code local (personal — hooks, plugins)
+.claude/settings.json
 
 # Generated
 .resolved-prompt-*

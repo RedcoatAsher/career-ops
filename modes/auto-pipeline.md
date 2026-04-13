@@ -62,6 +62,43 @@ Si el score final es >= 4.5, generar borrador de respuestas para el formulario d
 **Idioma**: Siempre en el idioma del JD (EN default). Aplicar `/tech-translate`.
 
 ## Paso 5 — Actualizar Tracker
-Registrar en `data/applications.md` con todas las columnas incluyendo Report y PDF en ✅.
+
+Determinar el tracker correcto según el geo del rol:
+- Job UK / Europe / EMEA → `data/applications.md`
+- Job US / Americas / Remote-US → `data/applications-us.md`
+- Unknown / fully remote → `data/applications.md` (default)
+
+Registrar en el tracker correcto con todas las columnas incluyendo Report y PDF en ✅.
+
+**Note:** `merge-tracker.mjs` and all maintenance scripts operate on `data/applications.md` (UK). For US entries, edit `data/applications-us.md` directly.
+
+## Paso 6 — Sync to Obsidian Vault
+
+Write the application note to the `_jobSeeking` vault so the Dataview dashboard picks it up.
+
+**Determine folder:**
+- Job UK/Europe/EMEA → `UK Applications`
+- Job US/Americas or explicitly Remote-US → `US Applications`
+- Unknown / fully remote → `UK Applications` (default)
+
+**File name:** `{###} - {Company Name}.md` (e.g. `002 - Anthropic.md`)
+
+**Run:**
+```bash
+node obsidian-sync.mjs \
+  --file "{###} - {Company Name}.md" \
+  --content "reports/{###}-{slug}-{date}.md" \
+  --folder "{UK Applications|US Applications}" \
+  --geo "{UK|US}" \
+  --company "{Company}" \
+  --role "{Role Title}" \
+  --score "{X.X/5}" \
+  --status "{Canonical Status}" \
+  --archetype "{matched archetype from _shared.md}" \
+  --url "{JD URL}" \
+  --pdf {true|false}
+```
+
+If Obsidian is closed or the API is unreachable, the script exits safely — the pipeline is not blocked.
 
 **Si algún paso falla**, continuar con los siguientes y marcar el paso fallido como pendiente en el tracker.
