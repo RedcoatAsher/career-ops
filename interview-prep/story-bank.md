@@ -30,6 +30,7 @@ This file accumulates your best interview stories over time. Each evaluation (Bl
 ## Stories added 2026-04-13 (Pipeline Batch 1 — US)
 
 ### [Design Org Building] Building a 10-Person Design Function from Scratch
+
 **Source:** Reports #004, #005, #006, #014, #030 (Smartsheet, AlphaSense, Medallion, Roo, User Interviews)
 **S:** Joined Bark.com when design function was 2 people, no system, no research practice, with a mandate to ship AI features that drive revenue.
 **T:** Build a world-class design org while shipping AI features that generate measurable business outcomes.
@@ -41,6 +42,7 @@ This file accumulates your best interview stories over time. Each evaluation (Bl
 ---
 
 ### [AI Product Design] Designing LLM-Integrated Experiences with Revenue Proof
+
 **Source:** Reports #004, #005, #030 (Smartsheet, AlphaSense, User Interviews)
 **S:** Bark.com wanted to integrate LLMs into 3 revenue-critical flows but had no framework for designing or validating AI feature quality.
 **T:** Design, ship, and measure AI features in onboarding, quote generation, and support — and prove that good design drives revenue, not just engagement.
@@ -52,6 +54,7 @@ This file accumulates your best interview stories over time. Each evaluation (Bl
 ---
 
 ### [Founder Credibility] CaseLab — Zero to PMF to Acquisition in 10 Months
+
 **Source:** Reports #008, #009, #018, #020, #021 (Vercel, Arize, Anthropic roles)
 **S:** Identified a market gap: designers spent days manually compiling portfolio case studies from scattered artifacts. No good AI solution existed.
 **T:** Build and ship an AI product from zero that compresses the workflow and preserves human creative control.
@@ -63,6 +66,7 @@ This file accumulates your best interview stories over time. Each evaluation (Bl
 ---
 
 ### [Enterprise Scale] Workday — 2M+ User Enterprise Platform Redesign
+
 **Source:** Reports #004, #005, #006 (Smartsheet, AlphaSense, Medallion)
 **S:** Workday's internal enterprise platform served 2M+ users globally with outdated UX and fragmented workflow automation. Process was deeply manual in a compliance-heavy environment.
 **T:** Lead systems redesign affecting the full user base while managing 100+ internal stakeholders and building a measurement framework.
@@ -74,6 +78,7 @@ This file accumulates your best interview stories over time. Each evaluation (Bl
 ---
 
 ### [Human-AI Control] Designing AI Capability Without Replacing Human Agency
+
 **Source:** Report #021 (Anthropic Education Labs)
 **S:** CaseLab automated a creative process. Users' biggest fear: "If AI writes my case study, is it still mine?"
 **T:** Design an AI workflow that feels like a powerful creative assistant — not a ghostwriter or a replacement.
@@ -85,6 +90,7 @@ This file accumulates your best interview stories over time. Each evaluation (Bl
 ---
 
 ### [Research as Strategy] Founding a Research Practice that Changes How Decisions Are Made
+
 **Source:** Reports #004, #005, #030 (Smartsheet, AlphaSense, User Interviews)
 **S:** Bark.com had no research function. 15+ AI feature experiments were running with no clear framework for measuring design effectiveness. Decisions were made on gut feel.
 **T:** Build research capability from scratch and embed it in product decision-making — changing how resources are allocated, not just informing individual features.
@@ -96,6 +102,7 @@ This file accumulates your best interview stories over time. Each evaluation (Bl
 ---
 
 ### [Agentic UX] Designing for Invisible Complexity — Fetchd.ai
+
 **Source:** Report #009 (Arize AI)
 **S:** Fetchd.ai's pipeline involves multi-marketplace API connections, LLM-generated structured pages, schema.org data, and AI referral tracking — genuinely complex.
 **T:** Design an interaction model where none of this complexity is visible to non-technical marketplace sellers.

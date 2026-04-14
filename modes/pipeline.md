@@ -14,7 +14,7 @@ Processes offer URLs accumulated in `data/pipeline.md`. The user adds URLs whene
 3. **If there are 3+ pending URLs**, launch agents in parallel (Agent tool with `run_in_background`) to maximize speed.
 4. **When done**, show summary table:
 
-```
+```text
 | # | Company | Role | Score | PDF | Recommended Action |
 ```
 
@@ -51,6 +51,7 @@ Processes offer URLs accumulated in `data/pipeline.md`. The user adds URLs whene
 ## Source Sync
 
 Before processing any URL, verify sync:
+
 ```bash
 node cv-sync-check.mjs
 ```

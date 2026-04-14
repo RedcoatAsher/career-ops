@@ -1,3 +1,6 @@
+<!-- @include: modes/_shared.md -->
+<!-- @include: modes/_profile.md -->
+
 # Mode: scan — Portal Scanner (Offer Discovery)
 
 Scans configured job portals, filters by title relevance, and adds new offers to the pipeline for later evaluation.
@@ -6,7 +9,7 @@ Scans configured job portals, filters by title relevance, and adds new offers to
 
 Run as a subagent to avoid consuming main context:
 
-```
+```python
 Agent(
     subagent_type="general-purpose",
     prompt="[content of this file + specific data]",
@@ -112,7 +115,7 @@ Levels are additive — all run, results are merged and deduplicated.
    - `applications.md` → normalized company + role already evaluated
    - `pipeline.md` → exact URL already in pending or processed
 
-7.5. **Verify liveness of WebSearch results (Level 3)** — BEFORE adding to pipeline:
+7.5. **Liveness verification for WebSearch results (Level 3)** — BEFORE adding to pipeline:
 
    WebSearch results may be stale (Google caches results for weeks or months). To avoid evaluating expired offers, verify with Playwright each new URL from Level 3. Levels 1 and 2 are inherently real-time and do not require this check.
 
@@ -126,17 +129,17 @@ Levels are additive — all run, results are merged and deduplicated.
         - Page contains: "job no longer available" / "no longer open" / "position has been filled" / "this job has expired" / "page not found"
         - Only navbar and footer visible, no JD content (content < ~300 chars)
    d. If expired: record in `scan-history.tsv` with status `skipped_expired` and discard
-   e. If active: continue to step 8
+   e. If active: continue to step 9
 
    **Do not interrupt the whole scan if a URL fails.** If `browser_navigate` errors (timeout, 403, etc.), mark as `skipped_expired` and continue with the next.
 
-8. **For each new verified offer that passes filters**:
+9. **For each new verified offer that passes filters**:
    a. Add to `pipeline.md` "Pending" section: `- [ ] {url} | {company} | {title}`
    b. Record in `scan-history.tsv`: `{url}\t{date}\t{query_name}\t{title}\t{company}\tadded`
 
-9. **Offers filtered by title**: record in `scan-history.tsv` with status `skipped_title`
-10. **Duplicate offers**: record with status `skipped_dup`
-11. **Expired offers (Level 3)**: record with status `skipped_expired`
+10. **Offers filtered by title**: record in `scan-history.tsv` with status `skipped_title`
+11. **Duplicate offers**: record with status `skipped_dup`
+12. **Expired offers (Level 3)**: record with status `skipped_expired`
 
 ## Title and Company Extraction from WebSearch Results
 
@@ -169,7 +172,7 @@ https://...	2026-02-10	WebSearch — AI PM	PM AI	ClosedCo	skipped_expired
 
 ## Output Summary
 
-```
+```text
 Portal Scan — {YYYY-MM-DD}
 ━━━━━━━━━━━━━━━━━━━━━━━━━━
 Queries executed: N

@@ -812,11 +812,8 @@ func (m PipelineModel) renderPreview() string {
 		}
 	} else if app.Notes != "" {
 		// Fallback: show notes
-		notes := app.Notes
 		notesWidth := max(0, m.width-10)
-		if notesWidth > 0 && len(notes) > notesWidth {
-			notes = notes[:max(0, m.width-13)] + "..."
-		}
+		notes := truncateRunes(app.Notes, notesWidth)
 		lines = append(lines, padStyle.Render(dimStyle.Render(notes)))
 	} else {
 		lines = append(lines, padStyle.Render(dimStyle.Render("Loading preview...")))

@@ -25,7 +25,8 @@
 
 import https from 'https';
 import { readFileSync, existsSync } from 'fs';
-import { resolve } from 'path';
+import { resolve, join } from 'path';
+import { pathToFileURL } from 'url';
 
 // -- Load .env (no dotenv dependency) --
 function loadEnv() {
@@ -86,6 +87,16 @@ const geo       = get('--geo')       ?? (folder.startsWith('UK') ? 'UK' : 'US');
 const location  = get('--location')  ?? '';
 const remote    = get('--remote')    ?? '';
 
+// -- YAML scalar escaping --
+function yamlEscape(val) {
+  if (!val) return '""';
+  const escaped = String(val)
+    .replace(/\\/g, '\\\\')
+    .replace(/"/g, '\\"')
+    .replace(/\n/g, '\\n');
+  return `"${escaped}"`;
+}
+
 const statusTagMap = {
   'Evaluated': 'evaluated',
   'Applied': 'applied',
@@ -105,16 +116,16 @@ const frontmatter = [
   `  - geo-${geo.toLowerCase()}`,
   ...(remote ? [`  - ${remote.toLowerCase().replace(/[^a-z]/g, '-')}`] : []),
   `date: ${date}`,
-  `geo: ${geo}`,
-  `company: ${company}`,
-  `role: ${role}`,
-  `score: ${score}`,
-  `status: ${status}`,
-  `pdf: ${pdf}`,
-  `archetype: ${archetype}`,
-  `url: ${url}`,
-  ...(location ? [`location: "${location}"`] : []),
-  ...(remote   ? [`remote: ${remote}`]        : []),
+  `geo: ${yamlEscape(geo)}`,
+  `company: ${yamlEscape(company)}`,
+  `role: ${yamlEscape(role)}`,
+  `score: ${yamlEscape(score)}`,
+  `status: ${yamlEscape(status)}`,
+  `pdf: ${yamlEscape(pdf)}`,
+  `archetype: ${yamlEscape(archetype)}`,
+  `url: ${yamlEscape(url)}`,
+  ...(location ? [`location: ${yamlEscape(location)}`] : []),
+  ...(remote   ? [`remote: ${yamlEscape(remote)}`]     : []),
   '---',
   '',
 ].join('\n');
@@ -129,11 +140,27 @@ const repoRoot = getRepoRoot();
 
 let reportContent = readFileSync(content, 'utf8');
 if (pdfFile && repoRoot) {
-  const absPath = `${repoRoot}/output/${pdfFile}`;
-  reportContent = reportContent.replace(
-    /\*\*PDF:\*\*.*/,
-    `**PDF:** ✅ [${pdfFile}](file://${absPath})`
-  );
+  // Validate: plain filename only (no path separators)
+  if (/[/\\]/.test(pdfFile)) {
+    console.warn(`⚠  Invalid --pdf-file value (path traversal attempt): ${pdfFile}`);
+  } else {
+    const outputDir = join(repoRoot, 'output');
+    const absPath = resolve(join(outputDir, pdfFile));
+    if (!absPath.startsWith(outputDir + '/') && absPath !== outputDir) {
+      console.warn(`⚠  Resolved PDF path escapes output dir — skipping link`);
+    } else if (!existsSync(absPath)) {
+      reportContent = reportContent.replace(
+        /\*\*PDF:\*\*.*/,
+        `**PDF:** ❌ file not found`
+      );
+    } else {
+      const fileUrl = pathToFileURL(absPath).href;
+      reportContent = reportContent.replace(
+        /\*\*PDF:\*\*.*/,
+        `**PDF:** ✅ [${pdfFile}](${fileUrl})`
+      );
+    }
+  }
 }
 const noteContent = frontmatter + reportContent;
 
@@ -160,6 +187,10 @@ const req = https.request(options, (res) => {
   } else {
     console.warn(`⚠  Obsidian sync returned ${res.statusCode} — skipping`);
   }
+});
+
+req.setTimeout(10000, () => {
+  req.destroy(new Error('Request timed out'));
 });
 
 req.on('error', (e) => {

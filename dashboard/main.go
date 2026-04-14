@@ -121,7 +121,13 @@ func (m appModel) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 			}
 			if err := cmd.Start(); err != nil {
 				fmt.Fprintf(os.Stderr, "WARN: open URL failed: %v\n", err)
+				return nil
 			}
+			go func() {
+				if err := cmd.Wait(); err != nil {
+					fmt.Fprintf(os.Stderr, "WARN: open URL exited with error: %v\n", err)
+				}
+			}()
 			return nil
 		}
 

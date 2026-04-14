@@ -1,3 +1,6 @@
+<!-- @include: modes/_shared.md -->
+<!-- @include: modes/_profile.md -->
+
 # Mode: oferta — Full A-G Evaluation
 
 When the candidate pastes an offer (text or URL), ALWAYS deliver all 7 blocks (A-F evaluation + G legitimacy):

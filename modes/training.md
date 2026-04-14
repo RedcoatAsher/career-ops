@@ -1,3 +1,6 @@
+<!-- @include: modes/_shared.md -->
+<!-- @include: modes/_profile.md -->
+
 # Mode: training — Training Evaluation
 
 For each course/cert the candidate asks about, evaluate 6 dimensions:

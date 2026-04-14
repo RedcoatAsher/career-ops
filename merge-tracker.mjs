@@ -183,8 +183,14 @@ function parseTsvContent(content, filename) {
         role: parts[3],
         location: parts[4],
         remote: parts[5],
-        status: validateStatus(statusLooksLikeScore ? scoreRaw : statusRaw),
-        score: statusLooksLikeScore ? statusRaw : scoreRaw,
+        status: validateStatus(
+          statusLooksLikeScore ? scoreRaw :
+          scoreLooksLikeStatus ? scoreRaw :
+          statusRaw
+        ),
+        score: statusLooksLikeScore ? statusRaw :
+               scoreLooksLikeStatus ? statusRaw :
+               scoreRaw,
         pdf: parts[8],
         report: parts[9],
         notes: parts[10] || '',
@@ -357,6 +363,21 @@ if (newLines.length > 0) {
   }
   if (lastDataIdx >= 0) {
     appLines.splice(lastDataIdx + 1, 0, ...newLines);
+  } else {
+    // Header-only table: find the separator line (contains ---) and insert after it
+    let separatorIdx = -1;
+    for (let i = 0; i < appLines.length; i++) {
+      if (appLines[i].startsWith('|') && appLines[i].includes('---')) {
+        separatorIdx = i;
+        break;
+      }
+    }
+    if (separatorIdx >= 0) {
+      appLines.splice(separatorIdx + 1, 0, ...newLines);
+    } else {
+      // No table structure found: append at end of file
+      appLines.push(...newLines);
+    }
   }
 }
 

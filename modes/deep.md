@@ -1,8 +1,11 @@
+<!-- @include: modes/_shared.md -->
+<!-- @include: modes/_profile.md -->
+
 # Mode: deep — Deep Research Prompt
 
 Generates a structured prompt for Perplexity/Claude/ChatGPT with 6 axes:
 
-```
+```markdown
 ## Deep Research: [Company] — [Role]
 
 Context: I'm evaluating an application for [role] at [company]. I need actionable information for the interview.

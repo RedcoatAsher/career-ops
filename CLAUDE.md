@@ -293,7 +293,7 @@ Default modes are in `modes/` (English). Additional language-specific modes are 
 Write one TSV file per evaluation to `batch/tracker-additions/{num}-{company-slug}.tsv`. Single line, 11 tab-separated columns:
 
 ```
-{num}\t{date}\t{company}\t{role}\t{location}\t{remote}\t{status}\t{score}/5\t{pdf_emoji}\t[{num}](reports/{num}-{slug}-{date}.md)\t{note}
+{num}\t{date}\t{company}\t{role}\t{location}\t{remote}\t{status}\t{score}\t{pdf_emoji}\t[{num}](reports/{num}-{slug}-{date}.md)\t{note}
 ```
 
 **Column order (IMPORTANT -- status BEFORE score):**
@@ -306,7 +306,7 @@ Write one TSV file per evaluation to `batch/tracker-additions/{num}-{company-slu
 7. `status` -- canonical status (e.g., `Evaluated`)
 8. `score` -- numeric (e.g., `4.2`)
 9. `pdf` -- `✅` or `❌`
-10. `report` -- markdown link `[num](reports/...)`
+10. `report` -- Markdown link `[num](reports/...)`
 11. `notes` -- one-line summary
 
 **Note:** In applications.md, score comes BEFORE status. The merge script handles this column swap automatically.

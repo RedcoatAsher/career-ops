@@ -186,7 +186,7 @@ Where `{company-slug}` is the company name in lowercase, no spaces, with hyphens
 **Location:** {city/country from JD — e.g. "San Francisco, CA" or "Remote US"}
 **Remote:** {remote|on-site|unknown}
 **URL:** {original offer URL}
-**PDF:** career-ops/output/cv-candidate-{company-slug}-{{DATE}}.pdf
+**PDF:** output/cv-candidate-{company-slug}-{{DATE}}.pdf
 **Batch ID:** {{ID}}
 
 ---
@@ -220,7 +220,7 @@ Where `{company-slug}` is the company name in lowercase, no spaces, with hyphens
 
 ### Step 4 — Generate PDF
 
-1. Read `cv.md` + `i18n.ts`
+1. Read `cv.md` and read `i18n.ts` only if it exists
 2. Extract 15-20 keywords from the JD
 3. Detect JD language → CV language (EN default)
 4. Detect company location → paper format: US/Canada → `letter`, rest → `a4`
@@ -358,6 +358,14 @@ If something fails:
   "report": "{report_path_if_exists}",
   "error": "{error_description}"
 }
+```
+
+### Step 7 — Consolidate tracker additions
+
+After batch evaluations complete, run:
+
+```bash
+node merge-tracker.mjs
 ```
 
 ---

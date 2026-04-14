@@ -7,17 +7,17 @@
       ],
       "command": "npx",
       "type": "stdio"
-    }
-  },
-  "github": {
-    "type": "stdio",
-    "command": "npx",
-    "args": [
+    },
+    "github": {
+      "type": "stdio",
+      "command": "npx",
+      "args": [
         "-y",
         "@modelcontextprotocol/server-github"
-    ],
-    "env": {
+      ],
+      "env": {
         "GITHUB_TOKEN": "${GITHUB_TOKEN}"
+      }
     }
   }
 }

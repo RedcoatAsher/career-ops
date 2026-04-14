@@ -11,7 +11,7 @@ Scoring matrix of 10 weighted dimensions:
 | Growth Trajectory | 10% | 5=clear path to next level, 1=dead end |
 | Remote Quality | 5% | 5=full remote async, 1=onsite only |
 | Company Reputation | 5% | 5=top employer, 1=red flags |
-| Tech Stack Modernity | 5% | 5=cutting edge AI/ML, 1=legacy |
+| Tech Stack Modernity | 5% | 5=cutting-edge AI/ML, 1=legacy |
 | Speed to Offer | 5% | 5=fast process, 1=6+ months |
 | Cultural Signals | 5% | 5=builder culture, 1=bureaucratic |
 

@@ -1,3 +1,6 @@
+<!-- @include: modes/_shared.md -->
+<!-- @include: modes/_profile.md -->
+
 # Mode: pdf — ATS-Optimized PDF Generation
 
 ## Full Pipeline
