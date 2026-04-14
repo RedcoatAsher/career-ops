@@ -159,6 +159,9 @@ async function generatePDF() {
       preferCSSPageSize: false,
     });
 
+    // Ensure the output directory exists (handles nested paths like output/cv/foo.pdf)
+    mkdirSync(dirname(outputPath), { recursive: true });
+
     // Write PDF
     const { writeFile } = await import('fs/promises');
     await writeFile(outputPath, pdfBuffer);
