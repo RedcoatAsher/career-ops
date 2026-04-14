@@ -25,7 +25,7 @@
 
 import https from 'https';
 import { readFileSync, existsSync } from 'fs';
-import { resolve, join } from 'path';
+import { resolve, join, relative, isAbsolute } from 'path';
 import { pathToFileURL } from 'url';
 
 // -- Load .env (no dotenv dependency) --
@@ -64,6 +64,10 @@ const content = get('--content');
 const folder  = get('--folder') ?? 'UK Applications';
 
 if (!file || !content) {
+  if (args.includes('--auto')) {
+    // Called by hook without file/content — nothing to sync, exit silently
+    process.exit(0);
+  }
   console.error('Usage: node obsidian-sync.mjs --file "001 - Company.md" --content reports/001-slug.md [--folder "UK Applications"] [options]');
   process.exit(1);
 }
@@ -82,6 +86,7 @@ const status    = get('--status')    ?? 'Evaluated';
 const archetype = get('--archetype') ?? '';
 const url       = get('--url')       ?? '';
 const pdf       = get('--pdf')       ?? 'false';
+const pdfBool   = String(pdf).toLowerCase() === 'true';
 const pdfFile   = get('--pdf-file')  ?? '';
 const geo       = get('--geo')       ?? (folder.startsWith('UK') ? 'UK' : 'US');
 const location  = get('--location')  ?? '';
@@ -100,6 +105,7 @@ function yamlEscape(val) {
 const statusTagMap = {
   'Evaluated': 'evaluated',
   'Applied': 'applied',
+  'Responded': 'responded',
   'SKIP': 'skip',
   'Rejected': 'rejected',
   'Discarded': 'discarded',
@@ -121,7 +127,7 @@ const frontmatter = [
   `role: ${yamlEscape(role)}`,
   `score: ${yamlEscape(score)}`,
   `status: ${yamlEscape(status)}`,
-  `pdf: ${yamlEscape(pdf)}`,
+  `pdf: ${pdfBool}`,
   `archetype: ${yamlEscape(archetype)}`,
   `url: ${yamlEscape(url)}`,
   ...(location ? [`location: ${yamlEscape(location)}`] : []),
@@ -146,7 +152,8 @@ if (pdfFile && repoRoot) {
   } else {
     const outputDir = join(repoRoot, 'output');
     const absPath = resolve(join(outputDir, pdfFile));
-    if (!absPath.startsWith(outputDir + '/') && absPath !== outputDir) {
+    const rel = relative(outputDir, absPath);
+    if (rel.startsWith('..') || isAbsolute(rel)) {
       console.warn(`⚠  Resolved PDF path escapes output dir — skipping link`);
     } else if (!existsSync(absPath)) {
       reportContent = reportContent.replace(

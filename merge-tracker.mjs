@@ -176,6 +176,10 @@ function parseTsvContent(content, filename) {
       const scoreRaw  = parts[7].trim();
       const statusLooksLikeScore = /^\d+\.?\d*\/5$/.test(statusRaw) || statusRaw === 'N/A';
       const scoreLooksLikeStatus = /^(evaluated|applied|responded|interview|offer|rejected|discarded|skip|evaluada|aplicado|respondido|entrevista|oferta|rechazado|rechazada|descartado|descartada|cancelada|no aplicar)/i.test(scoreRaw);
+      // Swap heuristic: if col 7 looks like a score (not a status word) we use it as-is;
+      // if col 7 looks like a status word, or col 8 looks like a status word, columns are swapped.
+      // statusLooksLikeScore: col 7 has "4.2/5" → the columns are in reversed order
+      // scoreLooksLikeStatus: col 8 has a status word → same reversal from the other direction
       addition = {
         num: parseInt(parts[0]),
         date: parts[1],

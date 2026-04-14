@@ -41,7 +41,7 @@ Context: I'm evaluating an application for [role] at [company]. I need actionabl
 - How do they position themselves vs competition?
 
 ### 6. Candidate Angle
-Given my profile (read from cv.md and profile.yml for specific experience):
+Given my profile (read from cv.md and config/profile.yml for specific experience):
 - What unique value do I bring to this team?
 - Which of my projects are most relevant?
 - What story should I tell in the interview?
