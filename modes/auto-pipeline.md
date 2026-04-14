@@ -16,11 +16,12 @@ If the input is a **URL** (not pasted JD text), follow this strategy to extract 
 
 **If input is JD text** (not URL): use directly, no fetch needed.
 
-## Step 1 — A-F Evaluation
-Execute exactly like the `oferta` mode (read `modes/oferta.md` for all blocks A-F).
+## Step 1 — A-G Evaluation
+Execute exactly like the `oferta` mode (read `modes/oferta.md` for all blocks A-G including Block G Posting Legitimacy).
 
 ## Step 2 — Save Report .md
 Save the complete evaluation in `reports/{###}-{company-slug}-{YYYY-MM-DD}.md` (see format in `modes/oferta.md`).
+Include Block G in the saved report. Add `**Legitimacy:** {tier}` to the report header.
 
 ## Step 3 — Generate PDF
 Execute the complete `pdf` pipeline (read `modes/pdf.md`).
@@ -31,7 +32,7 @@ If the final score is >= 4.5, generate draft answers for the application form:
 
 1. **Extract form questions**: Use Playwright to navigate to the form and take a snapshot. If they can't be extracted, use the generic questions.
 2. **Generate answers** following the tone (see below).
-3. **Save in the report** as section `## G) Draft Application Answers`.
+3. **Save in the report** as section `## H) Draft Application Answers`.
 
 ### Generic Questions (use if form questions can't be extracted)
 

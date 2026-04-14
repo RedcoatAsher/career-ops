@@ -2,7 +2,7 @@
 
 You are a job offer evaluation worker for the candidate (read name from config/profile.yml). You receive an offer (URL + JD text) and produce:
 
-1. Complete A-F evaluation (report .md)
+1. Complete A-G evaluation (report .md)
 2. Customized ATS-optimized PDF
 3. Tracker line for later merge
 
@@ -47,7 +47,7 @@ You are a job offer evaluation worker for the candidate (read name from config/p
 2. If the file is empty or doesn't exist, try to get the JD from `{{URL}}` with WebFetch
 3. If both fail, report error and stop
 
-### Step 2 — A-F Evaluation
+### Step 2 — A-G Evaluation
 
 Read `cv.md`. Execute ALL blocks:
 
@@ -138,6 +138,22 @@ Top 5 CV changes + Top 5 LinkedIn changes.
 - 1 recommended case study (which project to present and how)
 - Red-flag questions and how to answer them
 
+#### Block G — Posting Legitimacy
+
+Analyze posting signals to assess whether this is a real, active opening.
+
+**Batch mode limitations:** Playwright is not available, so posting freshness signals (exact days posted, apply button state) cannot be directly verified. Mark these as "unverified (batch mode)."
+
+**What IS available in batch mode:**
+1. **Description quality analysis** -- Full JD text is available. Analyze specificity, requirements realism, salary transparency, boilerplate ratio.
+2. **Company hiring signals** -- WebSearch queries for layoff/freeze news (combine with Block D comp research).
+3. **Reposting detection** -- Read `data/scan-history.tsv` to check for prior appearances.
+4. **Role market context** -- Qualitative assessment from JD content.
+
+**Output format:** Same as interactive mode (Assessment tier + Signals table + Context Notes), but with a note that posting freshness is unverified.
+
+**Assessment:** Apply the same three tiers (High Confidence / Proceed with Caution / Suspicious), weighting available signals more heavily. If insufficient signals are available to make a determination, default to "Proceed with Caution" with a note about limited data.
+
 #### Global Score
 
 | Dimension | Score |
@@ -168,6 +184,7 @@ Where `{company-slug}` is the company name in lowercase, no spaces, with hyphens
 **Score:** {X/5}
 **Location:** {city/country from JD — e.g. "San Francisco, CA" or "Remote US"}
 **Remote:** {remote|on-site|unknown}
+**Legitimacy:** {High Confidence | Proceed with Caution | Suspicious}
 **URL:** {original offer URL}
 **PDF:** career-ops/output/cv-candidate-{company-slug}-{{DATE}}.pdf
 **Batch ID:** {{ID}}
@@ -190,6 +207,9 @@ Where `{company-slug}` is the company name in lowercase, no spaces, with hyphens
 (complete content)
 
 ## F) Interview Plan
+(complete content)
+
+## G) Posting Legitimacy
 (complete content)
 
 ---
@@ -318,6 +338,7 @@ When done, print to stdout a JSON summary for the orchestrator to parse:
   "company": "{company}",
   "role": "{role}",
   "score": {score_num},
+  "legitimacy": "{High Confidence|Proceed with Caution|Suspicious}",
   "pdf": "{pdf_path}",
   "report": "{report_path}",
   "error": null

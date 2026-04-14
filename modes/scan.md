@@ -33,9 +33,25 @@ Read `portals.yml` which contains:
 
 **Every company MUST have `careers_url` in portals.yml.** If it doesn't have one, find it once, save it, and use it in future scans.
 
-### Level 2 — Greenhouse API (COMPLEMENTARY)
+### Level 2 — ATS APIs / Feeds (COMPLEMENTARY)
 
-For companies with Greenhouse, the JSON API (`boards-api.greenhouse.io/v1/boards/{slug}/jobs`) returns clean structured data. Use as a quick complement to Level 1 — it's faster than Playwright but only works with Greenhouse.
+For companies with a public API or structured feed, use the JSON/XML response as a quick complement to Level 1 — faster than Playwright and reduces visual scraping errors.
+
+**Supported providers (variables in `{}`):**
+- **Greenhouse**: `https://boards-api.greenhouse.io/v1/boards/{company}/jobs`
+- **Ashby**: `https://jobs.ashbyhq.com/api/non-user-graphql?op=ApiJobBoardWithTeams`
+- **BambooHR**: list `https://{company}.bamboohr.com/careers/list`; job detail `https://{company}.bamboohr.com/careers/{id}/detail`
+- **Lever**: `https://api.lever.co/v0/postings/{company}?mode=json`
+- **Teamtailor**: `https://{company}.teamtailor.com/jobs.rss`
+- **Workday**: `https://{company}.{shard}.myworkdayjobs.com/wday/cxs/{company}/{site}/jobs`
+
+**Parsing conventions by provider:**
+- `greenhouse`: `jobs[]` → `title`, `absolute_url`
+- `ashby`: GraphQL `ApiJobBoardWithTeams` with `organizationHostedJobsPageName={company}` → `jobBoard.jobPostings[]` (`title`, `id`; build public URL if not in payload)
+- `bamboohr`: list `result[]` → `jobOpeningName`, `id`; build detail URL `https://{company}.bamboohr.com/careers/{id}/detail`; to read the full JD, GET the detail and use `result.jobOpening` (`jobOpeningName`, `description`, `datePosted`, `minimumExperience`, `compensation`, `jobOpeningShareUrl`)
+- `lever`: root array `[]` → `text`, `hostedUrl` (fallback: `applyUrl`)
+- `teamtailor`: RSS items → `title`, `link`
+- `workday`: `jobPostings[]`/`jobPostings` (tenant-dependent) → `title`, `externalPath` or URL built from host
 
 ### Level 3 — WebSearch queries (BROAD DISCOVERY)
 
@@ -64,11 +80,18 @@ Levels are additive — all run, results are merged and deduplicated.
    f. Accumulate in candidate list
    g. If `careers_url` fails (404, redirect), try `scan_query` as fallback and note to update the URL
 
-5. **Level 2 — Greenhouse APIs** (parallel):
+5. **Level 2 — ATS APIs / feeds** (parallel):
    For each company in `tracked_companies` with `api:` defined and `enabled: true`:
-   a. WebFetch of the API URL → JSON with job list
-   b. For each job extract: `{title, url, company}`
-   c. Accumulate in candidate list (dedup with Level 1)
+   a. WebFetch the API/feed URL
+   b. If `api_provider` is defined, use its parser; if not defined, infer from domain (`boards-api.greenhouse.io`, `jobs.ashbyhq.com`, `api.lever.co`, `*.bamboohr.com`, `*.teamtailor.com`, `*.myworkdayjobs.com`)
+   c. For **Ashby**, send POST with:
+      - `operationName: ApiJobBoardWithTeams`
+      - `variables.organizationHostedJobsPageName: {company}`
+      - GraphQL query for `jobBoardWithTeams` + `jobPostings { id title locationName employmentType compensationTierSummary }`
+   d. For **BambooHR**, the list only has basic metadata. For each relevant item, read `id`, GET `https://{company}.bamboohr.com/careers/{id}/detail`, and extract the full JD from `result.jobOpening`. Use `jobOpeningShareUrl` as public URL if present; otherwise use the detail URL.
+   e. For **Workday**, send POST JSON with at least `{"appliedFacets":{},"limit":20,"offset":0,"searchText":""}` and paginate by `offset` until results are exhausted
+   f. For each job extract and normalize: `{title, url, company}`
+   g. Accumulate in candidate list (dedup with Level 1)
 
 6. **Level 3 — WebSearch queries** (parallel if possible):
    For each query in `search_queries` with `enabled: true`:
@@ -89,12 +112,31 @@ Levels are additive — all run, results are merged and deduplicated.
    - `applications.md` → normalized company + role already evaluated
    - `pipeline.md` → exact URL already in pending or processed
 
-8. **For each new offer that passes filters**:
+7.5. **Liveness verification for WebSearch results (Level 3)** — BEFORE adding to pipeline:
+
+   WebSearch results can be stale (Google caches results for weeks or months). To avoid evaluating expired offers, verify with Playwright every new URL that comes from Level 3. Levels 1 and 2 are inherently real-time and do not require this verification.
+
+   For each new Level 3 URL (sequential — NEVER Playwright in parallel):
+   a. `browser_navigate` to the URL
+   b. `browser_snapshot` to read content
+   c. Classify:
+      - **Active**: job title visible + role description + Apply/Submit control visible within main content area. Do not count generic header/navbar/footer text.
+      - **Expired** (any of these signals):
+        - Final URL contains `?error=true` (Greenhouse redirects this way when an offer is closed)
+        - Page contains: "job no longer available" / "no longer open" / "position has been filled" / "this job has expired" / "page not found"
+        - Only navbar and footer visible, no JD content (content < ~300 chars)
+   d. If expired: record in `scan-history.tsv` with status `skipped_expired` and discard
+   e. If active: continue to step 8
+
+   **Do not abort the entire scan if a URL fails.** If `browser_navigate` errors (timeout, 403, etc.), mark as `skipped_expired` and continue to the next.
+
+8. **For each new verified offer that passes filters**:
    a. Add to `pipeline.md` "Pending" section: `- [ ] {url} | {company} | {title}`
    b. Record in `scan-history.tsv`: `{url}\t{date}\t{query_name}\t{title}\t{company}\tadded`
 
 9. **Offers filtered by title**: record in `scan-history.tsv` with status `skipped_title`
 10. **Duplicate offers**: record with status `skipped_dup`
+11. **Expired offers (Level 3)**: record with status `skipped_expired`
 
 ## Title and Company Extraction from WebSearch Results
 
@@ -122,6 +164,7 @@ url	first_seen	portal	title	company	status
 https://...	2026-02-10	Ashby — AI PM	PM AI	Acme	added
 https://...	2026-02-10	Greenhouse — SA	Junior Dev	BigCo	skipped_title
 https://...	2026-02-10	Ashby — AI PM	SA AI	OldCo	skipped_dup
+https://...	2026-02-10	WebSearch — AI PM	PM AI	ClosedCo	skipped_expired
 ```
 
 ## Output Summary
@@ -133,6 +176,7 @@ Queries executed: N
 Offers found: N total
 Filtered by title: N relevant
 Duplicates: N (already evaluated or in pipeline)
+Expired discarded: N (dead links, Level 3)
 New offers added to pipeline.md: N
 
   + {company} | {title} | {query_name}
@@ -149,7 +193,17 @@ Every company in `tracked_companies` must have `careers_url` — the direct URL 
 - **Ashby:** `https://jobs.ashbyhq.com/{slug}`
 - **Greenhouse:** `https://job-boards.greenhouse.io/{slug}` or `https://job-boards.eu.greenhouse.io/{slug}`
 - **Lever:** `https://jobs.lever.co/{slug}`
+- **BambooHR:** list `https://{company}.bamboohr.com/careers/list`; detail `https://{company}.bamboohr.com/careers/{id}/detail`
+- **Teamtailor:** `https://{company}.teamtailor.com/jobs`
+- **Workday:** `https://{company}.{shard}.myworkdayjobs.com/{site}`
 - **Custom:** The company's own URL (e.g. `https://openai.com/careers`)
+
+**API/feed patterns by platform:**
+- **Ashby API:** `https://jobs.ashbyhq.com/api/non-user-graphql?op=ApiJobBoardWithTeams`
+- **BambooHR API:** list `https://{company}.bamboohr.com/careers/list`; detail `https://{company}.bamboohr.com/careers/{id}/detail` (`result.jobOpening`)
+- **Lever API:** `https://api.lever.co/v0/postings/{company}?mode=json`
+- **Teamtailor RSS:** `https://{company}.teamtailor.com/jobs.rss`
+- **Workday API:** `https://{company}.{shard}.myworkdayjobs.com/wday/cxs/{company}/{site}/jobs`
 
 **If `careers_url` doesn't exist** for a company:
 1. Try the pattern for its known platform

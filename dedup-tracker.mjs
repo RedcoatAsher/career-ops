@@ -13,25 +13,44 @@
  * Run: node dedup-tracker.mjs [--dry-run]
  */
 
-import { readFileSync, writeFileSync, copyFileSync, existsSync } from 'fs';
-import { join } from 'path';
+import { readFileSync, writeFileSync, copyFileSync, existsSync, mkdirSync } from 'fs';
+import { join, dirname } from 'path';
+import { fileURLToPath } from 'url';
 
-const CAREER_OPS = new URL('.', import.meta.url).pathname;
+const CAREER_OPS = dirname(fileURLToPath(import.meta.url));
+// Support both layouts: data/applications.md (boilerplate) and applications.md (original)
 const APPS_FILE = existsSync(join(CAREER_OPS, 'data/applications.md'))
   ? join(CAREER_OPS, 'data/applications.md')
   : join(CAREER_OPS, 'applications.md');
 const DRY_RUN = process.argv.includes('--dry-run');
 
-// Canonical English status names, ordered by pipeline advancement
+// Ensure required directories exist (fresh setup)
+mkdirSync(join(CAREER_OPS, 'data'), { recursive: true });
+
+// Status advancement order (higher = more advanced in pipeline)
+// Aplicado > Rechazado because active application > terminal state
 const STATUS_RANK = {
-  'skip':       0,
-  'discarded':  0,
-  'rejected':   1,
-  'evaluated':  2,
-  'applied':    3,
-  'responded':  4,
-  'interview':  5,
-  'offer':      6,
+  // English canonicals (states.yml labels)
+  'skip': 0,
+  'discarded': 0,
+  'rejected': 1,
+  'evaluated': 2,
+  'applied': 3,
+  'responded': 4,
+  'interview': 5,
+  'offer': 6,
+  // Spanish aliases — kept for backwards compat with existing tracker data
+  'no_aplicar': 0,
+  'no aplicar': 0,
+  'descartado': 0,
+  'descartada': 0,
+  'rechazado': 1,  // Terminal — below active states
+  'rechazada': 1,
+  'evaluada': 2,
+  'aplicado': 3,
+  'respondido': 4,
+  'entrevista': 5,
+  'oferta': 6,
 };
 
 function normalizeCompany(name) {
@@ -46,19 +65,31 @@ function normalizeLocation(loc) {
   return (loc || '').toLowerCase().replace(/\s+/g, ' ').trim();
 }
 
-// Jaccard similarity on role tokens with length > 3.
-// Threshold 0.75 avoids false positives from role specialisations like
-// "Applied AI Engineer, Seoul" vs "Applied AI Engineer, Startups".
+const ROLE_STOPWORDS = new Set([
+  'senior', 'junior', 'lead', 'staff', 'principal', 'head', 'chief',
+  'manager', 'director', 'associate', 'intern', 'contractor',
+  'remote', 'hybrid', 'onsite',
+  'engineer', 'engineering',
+]);
+
+const LOCATION_STOPWORDS = new Set([
+  'tokyo', 'japan', 'london', 'berlin', 'paris', 'singapore',
+  'york', 'francisco', 'angeles', 'seattle', 'austin', 'boston',
+  'chicago', 'denver', 'toronto', 'amsterdam', 'dublin', 'sydney',
+  'remote', 'global', 'emea', 'apac', 'latam',
+]);
+
+// Jaccard similarity on role tokens with length > 1.
+// Keep tokens ≥ 2 chars so 2-char acronyms (AI, ML, QA) are preserved.
+// Without this, "AI Engineer" and "ML Engineer" both collapse to {"engineer"}
+// and score 1.0 Jaccard — incorrectly flagged as duplicates.
 function roleMatch(a, b) {
-  // Keep tokens ≥ 2 chars so 2-char acronyms (AI, ML, QA) are preserved.
-  // Without this, "AI Engineer" and "ML Engineer" both collapse to {"engineer"}
-  // and score 1.0 Jaccard — incorrectly flagged as duplicates.
-  const tokensA = new Set(
-    a.toLowerCase().replace(/[^a-z0-9 ]/g, ' ').split(/\s+/).filter(w => w.length > 1)
-  );
-  const tokensB = new Set(
-    b.toLowerCase().replace(/[^a-z0-9 ]/g, ' ').split(/\s+/).filter(w => w.length > 1)
-  );
+  const normalize = (s) => s.toLowerCase().replace(/[^a-z0-9 ]/g, ' ');
+  const filterTokens = (words) =>
+    words.filter(w => w.length > 1 && !ROLE_STOPWORDS.has(w) && !LOCATION_STOPWORDS.has(w));
+
+  const tokensA = new Set(filterTokens(normalize(a).split(/\s+/)));
+  const tokensB = new Set(filterTokens(normalize(b).split(/\s+/)));
   if (tokensA.size === 0 || tokensB.size === 0) return false;
   const intersection = [...tokensA].filter(w => tokensB.has(w)).length;
   const union = new Set([...tokensA, ...tokensB]).size;

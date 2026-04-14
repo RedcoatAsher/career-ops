@@ -15,9 +15,11 @@
  */
 
 import { readFileSync, writeFileSync, readdirSync, mkdirSync, renameSync, existsSync } from 'fs';
-import { join, basename } from 'path';
+import { join, basename, dirname } from 'path';
+import { fileURLToPath } from 'url';
+import { execFileSync } from 'child_process';
 
-const CAREER_OPS = new URL('.', import.meta.url).pathname;
+const CAREER_OPS = dirname(fileURLToPath(import.meta.url));
 // Support both layouts: data/applications.md (boilerplate) and applications.md (original)
 const APPS_FILE = existsSync(join(CAREER_OPS, 'data/applications.md'))
   ? join(CAREER_OPS, 'data/applications.md')
@@ -26,6 +28,10 @@ const ADDITIONS_DIR = join(CAREER_OPS, 'batch/tracker-additions');
 const MERGED_DIR = join(ADDITIONS_DIR, 'merged');
 const DRY_RUN = process.argv.includes('--dry-run');
 const VERIFY = process.argv.includes('--verify');
+
+// Ensure required directories exist (fresh setup)
+mkdirSync(join(CAREER_OPS, 'data'), { recursive: true });
+mkdirSync(ADDITIONS_DIR, { recursive: true });
 
 // Canonical states and aliases (English)
 const CANONICAL_STATES = ['Evaluated', 'Applied', 'Responded', 'Interview', 'Offer', 'Rejected', 'Discarded', 'SKIP'];
@@ -40,15 +46,16 @@ function validateStatus(status) {
 
   // Aliases (English + Spanish backwards compat)
   const aliases = {
-    'enviada': 'Applied', 'aplicada': 'Applied', 'aplicado': 'Applied', 'sent': 'Applied',
-    'cerrada': 'Discarded', 'descartada': 'Discarded', 'descartado': 'Discarded', 'cancelada': 'Discarded',
-    'rechazada': 'Rejected', 'rechazado': 'Rejected',
+    // Spanish → English
+    'evaluada': 'Evaluated', 'condicional': 'Evaluated', 'hold': 'Evaluated', 'evaluar': 'Evaluated', 'verificar': 'Evaluated',
+    'aplicado': 'Applied', 'enviada': 'Applied', 'aplicada': 'Applied', 'applied': 'Applied', 'sent': 'Applied',
+    'respondido': 'Responded',
+    'entrevista': 'Interview',
+    'oferta': 'Offer',
+    'rechazado': 'Rejected', 'rechazada': 'Rejected',
+    'descartado': 'Discarded', 'descartada': 'Discarded', 'cerrada': 'Discarded', 'cancelada': 'Discarded',
     'no aplicar': 'SKIP', 'no_aplicar': 'SKIP', 'skip': 'SKIP', 'monitor': 'SKIP',
     'geo blocker': 'SKIP',
-    'evaluada': 'Evaluated', 'condicional': 'Evaluated', 'hold': 'Evaluated',
-    'evaluar': 'Evaluated', 'verificar': 'Evaluated',
-    'respondido': 'Responded', 'entrevista': 'Interview',
-    'oferta': 'Offer',
   };
 
   if (aliases[lower]) return aliases[lower];
@@ -371,9 +378,8 @@ if (DRY_RUN) console.log('(dry-run — no changes written)');
 // Optional verify
 if (VERIFY && !DRY_RUN) {
   console.log('\n--- Running verification ---');
-  const { execSync } = await import('child_process');
   try {
-    execSync(`node ${join(CAREER_OPS, 'verify-pipeline.mjs')}`, { stdio: 'inherit' });
+    execFileSync('node', [join(CAREER_OPS, 'verify-pipeline.mjs')], { stdio: 'inherit' });
   } catch (e) {
     process.exit(1);
   }
