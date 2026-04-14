@@ -20,11 +20,21 @@ const APPS_FILE = existsSync(join(CAREER_OPS, 'data/applications.md'))
 const DRY_RUN = process.argv.includes('--dry-run');
 
 // Status advancement order (higher = more advanced in pipeline)
-// Aplicado > Rechazado because active application > terminal state
+// Includes legacy Spanish values for existing tracker rows
 const STATUS_RANK = {
+  // English canonical
+  'skip': 0,
+  'discarded': 0,
+  'rejected': 1,
+  'evaluated': 2,
+  'applied': 3,
+  'responded': 4,
+  'interview': 5,
+  'offer': 6,
+  // Legacy Spanish
   'no aplicar': 0,
   'descartado': 0,
-  'rechazado': 1,  // Terminal — below active states
+  'rechazado': 1,
   'evaluada': 2,
   'aplicado': 3,
   'respondido': 4,
@@ -40,6 +50,14 @@ function normalizeCompany(name) {
     .trim();
 }
 
+// Generic words that carry no discriminating signal for role matching
+const ROLE_STOP_WORDS = new Set([
+  'senior', 'staff', 'principal', 'lead', 'head', 'junior', 'associate',
+  'director', 'manager', 'engineer', 'developer', 'architect', 'specialist',
+  'analyst', 'consultant', 'advisor', 'executive', 'officer', 'president',
+  'and', 'the', 'for', 'with', 'of', 'in', 'at', 'to', 'a', 'an',
+]);
+
 function normalizeRole(role) {
   return role.toLowerCase()
     .replace(/[()]/g, ' ')
@@ -48,11 +66,27 @@ function normalizeRole(role) {
     .trim();
 }
 
+function significantWords(role) {
+  return normalizeRole(role)
+    .split(/\s+/)
+    .filter(w => w.length > 3 && !ROLE_STOP_WORDS.has(w));
+}
+
 function roleMatch(a, b) {
-  const wordsA = normalizeRole(a).split(/\s+/).filter(w => w.length > 3);
-  const wordsB = normalizeRole(b).split(/\s+/).filter(w => w.length > 3);
-  const overlap = wordsA.filter(w => wordsB.some(wb => wb.includes(w) || w.includes(wb)));
-  return overlap.length >= 2;
+  const wordsA = significantWords(a);
+  const wordsB = significantWords(b);
+  // Both roles must have significant words, and need 3+ overlapping
+  if (wordsA.length === 0 || wordsB.length === 0) return false;
+  const overlap = wordsA.filter(w => wordsB.some(wb => wb === w || (w.length > 5 && (wb.includes(w) || w.includes(wb)))));
+  return overlap.length >= 3;
+}
+
+function normalizeLocation(loc) {
+  if (!loc) return '';
+  return loc.toLowerCase()
+    .replace(/[^a-z0-9]/g, ' ')
+    .replace(/\s+/g, ' ')
+    .trim();
 }
 
 function parseScore(s) {
@@ -62,21 +96,44 @@ function parseScore(s) {
 
 function parseAppLine(line) {
   const parts = line.split('|').map(s => s.trim());
-  if (parts.length < 9) return null;
+  // New format (11 data cols): # | Date | Company | Role | Location | Remote | Score | Status | PDF | Report | Notes
+  // Old format (9 data cols):  # | Date | Company | Role | Score | Status | PDF | Report | Notes
+  const isNewFormat = parts.length >= 13;
+  if (parts.length < 11) return null;
   const num = parseInt(parts[1]);
   if (isNaN(num)) return null;
-  return {
-    num,
-    date: parts[2],
-    company: parts[3],
-    role: parts[4],
-    score: parts[5],
-    status: parts[6],
-    pdf: parts[7],
-    report: parts[8],
-    notes: parts[9] || '',
-    raw: line,
-  };
+  if (isNewFormat) {
+    return {
+      num,
+      date: parts[2],
+      company: parts[3],
+      role: parts[4],
+      location: parts[5],
+      remote: parts[6],
+      score: parts[7],
+      status: parts[8],
+      pdf: parts[9],
+      report: parts[10],
+      notes: parts[11] || '',
+      raw: line,
+    };
+  } else {
+    // Legacy format without location/remote columns
+    return {
+      num,
+      date: parts[2],
+      company: parts[3],
+      role: parts[4],
+      location: '',
+      remote: '',
+      score: parts[5],
+      status: parts[6],
+      pdf: parts[7],
+      report: parts[8],
+      notes: parts[9] || '',
+      raw: line,
+    };
+  }
 }
 
 // Read
@@ -102,10 +159,10 @@ for (let i = 0; i < lines.length; i++) {
 
 console.log(`📊 ${entries.length} entries loaded`);
 
-// Group by company+role
+// Group by company + location — entries in different geos are never duplicates
 const groups = new Map();
 for (const entry of entries) {
-  const key = normalizeCompany(entry.company);
+  const key = `${normalizeCompany(entry.company)}::${normalizeLocation(entry.location)}`;
   if (!groups.has(key)) groups.set(key, []);
   groups.get(key).push(entry);
 }
@@ -154,7 +211,8 @@ for (const [company, companyEntries] of groups) {
       const lineIdx = entryLineMap.get(keeper.num);
       if (lineIdx !== undefined) {
         const parts = lines[lineIdx].split('|').map(s => s.trim());
-        parts[6] = bestStatus;
+        const statusIdx = parts.length >= 13 ? 8 : 6; // new format vs legacy
+        parts[statusIdx] = bestStatus;
         lines[lineIdx] = '| ' + parts.slice(1, -1).join(' | ') + ' |';
         console.log(`  📝 #${keeper.num}: status promoted to "${bestStatus}" (from #${cluster.find(e => e.status === bestStatus)?.num})`);
       }

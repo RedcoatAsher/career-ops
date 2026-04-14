@@ -3,13 +3,13 @@
 ## TSV Format for Tracker Additions
 
 Write **one TSV file per evaluation** to `batch/tracker-additions/{num}-{company-slug}.tsv`.
-Single line, 9 tab-separated columns:
+Single line, 11 tab-separated columns:
 
 ```
-{num}\t{date}\t{company}\t{role}\t{status}\t{score}/5\t{pdf_emoji}\t[{num}](reports/{num}-{slug}-{date}.md)\t{note}
+{num}\t{date}\t{company}\t{role}\t{location}\t{remote}\t{status}\t{score}/5\t{pdf_emoji}\t[{num}](reports/{num}-{slug}-{date}.md)\t{note}
 ```
 
-**Column order — status BEFORE score in TSV:**
+**Column order:**
 
 | # | Field | Format |
 |---|-------|--------|
@@ -17,13 +17,15 @@ Single line, 9 tab-separated columns:
 | 2 | date | YYYY-MM-DD |
 | 3 | company | short name |
 | 4 | role | job title |
-| 5 | status | canonical (see `states.md`) |
-| 6 | score | `X.X/5` e.g. `4.2/5` |
-| 7 | pdf | `✅` or `❌` |
-| 8 | report | `[num](reports/num-slug-date.md)` |
-| 9 | notes | one-line summary |
+| 5 | location | city/region (e.g. `London`, `New York`, `Remote`) |
+| 6 | remote | `remote` or `on-site` |
+| 7 | status | canonical (see `states.md`) |
+| 8 | score | `X.X/5` e.g. `4.2/5` |
+| 9 | pdf | `✅` or `❌` |
+| 10 | report | `[num](reports/num-slug-date.md)` |
+| 11 | notes | one-line summary |
 
-**Note:** In `applications.md`, score comes BEFORE status. `merge-tracker.mjs` handles this column swap automatically.
+**Note:** In `applications.md`, score comes BEFORE status. `merge-tracker.mjs` handles legacy 9-col TSVs without location/remote (those fields default to empty).
 
 ## Tracker Files
 

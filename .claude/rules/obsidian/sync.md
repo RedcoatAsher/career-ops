@@ -40,7 +40,9 @@ node obsidian-sync.mjs \
   --status "{Canonical Status}" \
   --archetype "{matched archetype}" \
   --url "{JD URL}" \
-  --pdf {true|false}
+  --pdf {true|false} \
+  --location "{City or region}" \
+  --remote "{remote|on-site}"
 ```
 
 Requires `OBSIDIAN_API_KEY` in `.env`. Safe when Obsidian is closed — exits 0 with a warning.
@@ -64,6 +66,8 @@ status: Evaluated
 pdf: false
 archetype: Technical AI PM
 url: https://...
+location: London       # city or region; omitted if unknown
+remote: remote         # "remote" or "on-site"; omitted if unknown
 ---
 ```
 

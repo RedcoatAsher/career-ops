@@ -96,7 +96,9 @@ node obsidian-sync.mjs \
   --status "{Canonical Status}" \
   --archetype "{matched archetype from _shared.md}" \
   --url "{JD URL}" \
-  --pdf {true|false}
+  --pdf {true|false} \
+  --location "{City or region}" \
+  --remote "{remote|on-site}"
 ```
 
 If Obsidian is closed or the API is unreachable, the script exits safely — the pipeline is not blocked.

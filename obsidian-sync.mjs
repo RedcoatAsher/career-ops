@@ -82,6 +82,8 @@ const archetype = get('--archetype') ?? '';
 const url       = get('--url')       ?? '';
 const pdf       = get('--pdf')       ?? 'false';
 const geo       = get('--geo')       ?? (folder.startsWith('UK') ? 'UK' : 'US');
+const location  = get('--location')  ?? '';
+const remote    = get('--remote')    ?? '';
 
 const statusTagMap = {
   'Evaluated': 'evaluated',
@@ -104,12 +106,14 @@ const frontmatter = [
   `date: ${date}`,
   `geo: ${geo}`,
   `company: ${company}`,
-  `role: ${role}`,
+  `role: "[[#Evaluation: ${company} — ${role}|${role}]]"`,
   `score: ${score}`,
   `status: ${status}`,
   `pdf: ${pdf}`,
   `archetype: ${archetype}`,
   `url: ${url}`,
+  ...(location ? [`location: ${location}`] : []),
+  ...(remote   ? [`remote: ${remote}`]     : []),
   '---',
   '',
 ].join('\n');

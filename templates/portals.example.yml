@@ -57,6 +57,13 @@ title_filter:
     - "Business Systems"
     - "Internal Tools"
     - "Transformation"
+    # -- Design roles --
+    - "Product Designer"
+    - "UX Designer"
+    - "Head of Design"
+    - "Director of Design"
+    - "Design Lead"
+    - "Design Manager"
   negative:
     # [CUSTOMIZE] Add keywords for roles you want to exclude
     - "Junior"
@@ -177,6 +184,29 @@ search_queries:
   # -- RemoteFront (aggregator) --
   - name: RemoteFront — AI & Automation
     query: 'site:remotefront.com "AI Engineer" OR "Solutions Engineer" OR "Automation" OR "LLM" OR "Agent" remote'
+    enabled: true
+
+  # -- Design roles (cross-portal) --
+  - name: Ashby — Product Design
+    query: 'site:jobs.ashbyhq.com "Product Designer" OR "Head of Design" OR "Director of Design" OR "Design Lead" OR "Principal Designer" senior OR principal OR head OR director'
+    enabled: true
+
+  - name: Greenhouse — Product Design
+    query: 'site:job-boards.greenhouse.io "Product Designer" OR "Head of Design" OR "Director of Design" OR "Design Lead" OR "Principal Designer" senior OR principal OR head OR director'
+    enabled: true
+
+  - name: Lever — Product Design
+    query: 'site:jobs.lever.co "Product Designer" OR "Head of Design" OR "Director of Design" OR "Design Lead" OR "Principal Designer" senior OR principal OR head OR director'
+    enabled: true
+
+  # -- Generalist World (startup job board) --
+  - name: Generalist World — AI & Automation
+    query: 'site:generalist.world/jobs "AI" OR "LLM" OR "Agent" OR "Automation" OR "Solutions" remote'
+    enabled: true
+
+  # -- Remote Rocketship (remote job board) --
+  - name: Remote Rocketship — AI & Solutions
+    query: 'site:remoterocketship.com "AI Engineer" OR "Solutions Architect" OR "Solutions Engineer" OR "LLM" OR "Automation" remote'
     enabled: true
 
 # -- Tracked companies --

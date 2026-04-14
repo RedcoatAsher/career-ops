@@ -107,6 +107,9 @@ Guardar evaluación completa en `reports/{###}-{company-slug}-{YYYY-MM-DD}.md`.
 **Fecha:** {YYYY-MM-DD}
 **Arquetipo:** {detectado}
 **Score:** {X/5}
+**URL:** {JD URL}
+**Location:** {city or region}
+**Remote:** {remote|on-site}
 **PDF:** {ruta o pendiente}
 
 ---
@@ -153,5 +156,5 @@ Guardar evaluación completa en `reports/{###}-{company-slug}-{YYYY-MM-DD}.md`.
 **Formato del tracker:**
 
 ```markdown
-| # | Fecha | Empresa | Rol | Score | Estado | PDF | Report |
+| # | Fecha | Empresa | Rol | Location | Remote | Score | Estado | PDF | Report |
 ```
