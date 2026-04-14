@@ -78,7 +78,9 @@ if (!existsSync(content)) {
 }
 
 // -- Build frontmatter --
-const date      = get('--date')      ?? new Date().toISOString().split('T')[0];
+const _now = new Date();
+const _localDate = `${_now.getFullYear()}-${String(_now.getMonth()+1).padStart(2,'0')}-${String(_now.getDate()).padStart(2,'0')}`;
+const date      = get('--date')      ?? _localDate;
 const company   = get('--company')   ?? '';
 const role      = get('--role')      ?? '';
 const score     = get('--score')     ?? '';
@@ -172,6 +174,15 @@ if (pdfFile && repoRoot) {
 const noteContent = frontmatter + reportContent;
 
 // -- PUT to vault --
+function hasInvalidVaultSegments(value, { allowSlash = false } = {}) {
+  if (/\\/.test(value)) return true;
+  if (!allowSlash && value.includes('/')) return true;
+  return value.split('/').some(seg => !seg || seg === '.' || seg === '..');
+}
+if (hasInvalidVaultSegments(file) || hasInvalidVaultSegments(folder, { allowSlash: true })) {
+  console.error(`Invalid --file or --folder value (path traversal attempt): ${folder}/${file}`);
+  process.exit(1);
+}
 const encodedPath = `${folder}/${file}`.split('/').map(encodeURIComponent).join('/');
 const body = Buffer.from(noteContent, 'utf8');
 
