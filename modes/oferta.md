@@ -133,13 +133,17 @@ Save the full evaluation to `reports/{###}-{company-slug}-{YYYY-MM-DD}.md`.
 (full content of block F)
 
 ## G) Draft Application Answers
-(only if score >= 4.5 — draft answers for the application form)
+(only if score >= 3.5 — draft answers for the application form)
 
 ---
 
 ## Extracted keywords
 (list of 15-20 keywords from the JD for ATS optimisation)
 ```
+
+### Score Global
+
+**Use the Canonical Scoring Model from `modes/_shared.md`.** All 10 weighted dimensions. Show the per-dimension breakdown in the report, then compute the weighted total as the final score.
 
 ### 2. Register in tracker
 
@@ -148,7 +152,7 @@ Save the full evaluation to `reports/{###}-{company-slug}-{YYYY-MM-DD}.md`.
 - Current date
 - Company
 - Role
-- Score: match average (1-5)
+- Score: weighted total from the Canonical Scoring Model (1-5)
 - Status: `Evaluated`
 - PDF: ❌ (or ✅ if auto-pipeline generated PDF)
 - Report: relative link to the report .md (e.g.: `[001](reports/001-company-2026-01-01.md)`)

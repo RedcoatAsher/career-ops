@@ -25,9 +25,9 @@ Save the full evaluation to `reports/{###}-{company-slug}-{YYYY-MM-DD}.md` (see 
 ## Step 3 — Generate PDF
 Execute the full `pdf` pipeline (read `modes/pdf.md`).
 
-## Step 4 — Draft Application Answers (only if score >= 4.5)
+## Step 4 — Draft Application Answers (if score >= 3.5)
 
-If the final score is >= 4.5, generate draft answers for the application form:
+If the final score is >= 3.5 (per Canonical Scoring Model thresholds in `_shared.md`), generate draft answers for the application form:
 
 1. **Extract form questions**: Use Playwright to navigate to the form and take a snapshot. If they cannot be extracted, use the generic questions below.
 2. **Generate answers** following the tone below.
