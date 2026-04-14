@@ -75,7 +75,7 @@ Status tags derive from canonical states — see `.claude/rules/pipeline/states.
 
 ## Icon Rule (Iconize plugin)
 
-When a note's `status` is set to `SKIP`, add or update its entry in `.obsidian/plugins/obsidian-icon-folder/data.json`:
+When a note's `status` is set to `SKIPPED`, add or update its entry in `.obsidian/plugins/obsidian-icon-folder/data.json`:
 
 ```json
 "UK Applications/001 - Some Company.md": "❌"

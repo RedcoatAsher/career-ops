@@ -26,5 +26,5 @@ For each approved project:
 ## Verdicts
 
 - **BUILD** → plan with weekly milestones
-- **SKIP** → why and what to do instead
+- **SKIPPED** → why and what to do instead
 - **PIVOT TO [alternative]** → more impactful variant

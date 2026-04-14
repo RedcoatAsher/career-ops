@@ -307,7 +307,7 @@ TSV format (single line, no header, 11 tab-separated columns):
 
 **IMPORTANT:** TSV order has status BEFORE score (col 7→status, col 8→score). In applications.md the order is reversed (col 5→score, col 6→status). merge-tracker.mjs handles the conversion.
 
-**Valid canonical statuses:** `Evaluated`, `Applied`, `Responded`, `Interview`, `Offer`, `Rejected`, `Discarded`, `SKIP`
+**Valid canonical statuses:** `Evaluated`, `Applied`, `Responded`, `Interview`, `Offer`, `Rejected`, `Discarded`, `SKIPPED`
 
 Where `{next_num}` is calculated by reading the last line of `data/applications.md`.
 

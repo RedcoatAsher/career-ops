@@ -49,8 +49,8 @@ states:
     description: Discarded by candidate or offer closed
     dashboard_group: discarded
 
-  - id: skip
-    label: SKIP
-    aliases: [no_aplicar, no aplicar, skip, monitor]
+  - id: skipped
+    label: SKIPPED
+    aliases: [no_aplicar, no aplicar, skip, skipped, monitor]
     description: Doesn't fit, don't apply
     dashboard_group: skip

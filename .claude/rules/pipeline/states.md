@@ -11,7 +11,7 @@
 | `Offer` | Offer received |
 | `Rejected` | Rejected by company |
 | `Discarded` | Discarded by candidate or offer closed |
-| `SKIP` | Doesn't fit, don't apply |
+| `SKIPPED` | Doesn't fit, don't apply |
 
 ## Rules
 
@@ -27,7 +27,7 @@ When syncing to the Obsidian vault, canonical states map to frontmatter tags:
 |-------|-----|
 | `Evaluated` | `evaluated` |
 | `Applied` | `applied` |
-| `SKIP` / `SKIPPED` | `skip` |
+| `SKIPPED` | `skip` |
 | `Rejected` | `rejected` |
 | `Discarded` | `discarded` |
 | `Interview` | `interview` |
