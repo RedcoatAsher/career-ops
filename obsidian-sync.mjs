@@ -147,6 +147,9 @@ function getRepoRoot() {
 const repoRoot = getRepoRoot();
 
 let reportContent = readFileSync(content, 'utf8');
+if (pdfFile && !repoRoot) {
+  console.warn('⚠  --pdf-file provided but paths.repo_root is not set in config/profile.yml — skipping PDF link');
+}
 if (pdfFile && repoRoot) {
   // Validate: plain filename only (no path separators)
   if (/[/\\]/.test(pdfFile)) {
