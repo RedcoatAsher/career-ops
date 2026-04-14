@@ -121,7 +121,7 @@ const frontmatter = [
   'tags:',
   '  - application',
   `  - ${statusTag}`,
-  `  - geo-${geo.toLowerCase()}`,
+  `  - geo-${geo.toLowerCase().replace(/[^a-z0-9]/g, '-')}`,
   ...(remote ? [`  - ${remote.toLowerCase().replace(/[^a-z]/g, '-')}`] : []),
   `date: ${date}`,
   `geo: ${yamlEscape(geo)}`,
@@ -167,9 +167,10 @@ if (pdfFile && repoRoot) {
       );
     } else {
       const fileUrl = pathToFileURL(absPath).href;
+      const safePdfName = pdfFile.replace(/([[\]()])/g, '\\$1');
       reportContent = reportContent.replace(
         /\*\*PDF:\*\*.*/,
-        `**PDF:** ✅ [${pdfFile}](${fileUrl})`
+        `**PDF:** ✅ [${safePdfName}](${fileUrl})`
       );
     }
   }
