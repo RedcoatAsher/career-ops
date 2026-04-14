@@ -97,6 +97,7 @@ node obsidian-sync.mjs \
   --archetype "{matched archetype from _shared.md}" \
   --url "{JD URL}" \
   --pdf {true|false} \
+  --pdf-file "{filename.pdf from Step 3 — e.g. cv-company-2026-04-13.pdf — omit if no PDF}" \
   --location "{City or region}" \
   --remote "{remote|on-site}"
 ```
