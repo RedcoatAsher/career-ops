@@ -72,8 +72,9 @@ function normalizeCompany(name) {
 }
 
 function roleFuzzyMatch(a, b) {
-  const wordsA = a.toLowerCase().split(/\s+/).filter(w => w.length > 3);
-  const wordsB = b.toLowerCase().split(/\s+/).filter(w => w.length > 3);
+  // Keep tokens ≥ 2 chars so 2-char acronyms (AI, ML, QA) are preserved.
+  const wordsA = a.toLowerCase().split(/\s+/).filter(w => w.length > 1);
+  const wordsB = b.toLowerCase().split(/\s+/).filter(w => w.length > 1);
   const overlap = wordsA.filter(w => wordsB.some(wb => wb.includes(w) || w.includes(wb)));
   return overlap.length >= 2;
 }
@@ -174,7 +175,11 @@ function parseTsvContent(content, filename) {
       const statusRaw = parts[6].trim();
       const scoreRaw  = parts[7].trim();
       const statusLooksLikeScore = /^\d+\.?\d*\/5$/.test(statusRaw) || statusRaw === 'N/A';
-      const scoreLooksLikeStatus = /^(evaluated|applied|responded|interview|offer|rejected|discarded|skip|evaluada|aplicado|respondido|entrevista|oferta|rechazado|descartado|no aplicar)/i.test(scoreRaw);
+      const scoreLooksLikeStatus = /^(evaluated|applied|responded|interview|offer|rejected|discarded|skip|evaluada|aplicado|respondido|entrevista|oferta|rechazado|rechazada|descartado|descartada|cancelada|no aplicar)/i.test(scoreRaw);
+      // Swap heuristic: if col 7 looks like a score (not a status word) we use it as-is;
+      // if col 7 looks like a status word, or col 8 looks like a status word, columns are swapped.
+      // statusLooksLikeScore: col 7 has "4.2/5" → the columns are in reversed order
+      // scoreLooksLikeStatus: col 8 has a status word → same reversal from the other direction
       addition = {
         num: parseInt(parts[0]),
         date: parts[1],
@@ -182,8 +187,14 @@ function parseTsvContent(content, filename) {
         role: parts[3],
         location: parts[4],
         remote: parts[5],
-        status: validateStatus(statusLooksLikeScore ? scoreRaw : statusRaw),
-        score: statusLooksLikeScore ? statusRaw : scoreRaw,
+        status: validateStatus(
+          statusLooksLikeScore ? scoreRaw :
+          scoreLooksLikeStatus ? scoreRaw :
+          statusRaw
+        ),
+        score: statusLooksLikeScore ? statusRaw :
+               scoreLooksLikeStatus ? statusRaw :
+               scoreRaw,
         pdf: parts[8],
         report: parts[9],
         notes: parts[10] || '',
@@ -194,8 +205,8 @@ function parseTsvContent(content, filename) {
       const col5 = parts[5].trim();
       const col4LooksLikeScore = /^\d+\.?\d*\/5$/.test(col4) || col4 === 'N/A' || col4 === 'DUP';
       const col5LooksLikeScore = /^\d+\.?\d*\/5$/.test(col5) || col5 === 'N/A' || col5 === 'DUP';
-      const col4LooksLikeStatus = /^(evaluated|applied|responded|interview|offer|rejected|discarded|skip|evaluada|aplicado|respondido|entrevista|oferta|rechazado|descartado|no aplicar|cerrada|duplicado|repost|condicional|hold|monitor)/i.test(col4);
-      const col5LooksLikeStatus = /^(evaluated|applied|responded|interview|offer|rejected|discarded|skip|evaluada|aplicado|respondido|entrevista|oferta|rechazado|descartado|no aplicar|cerrada|duplicado|repost|condicional|hold|monitor)/i.test(col5);
+      const col4LooksLikeStatus = /^(evaluated|applied|responded|interview|offer|rejected|discarded|skip|evaluada|aplicado|respondido|entrevista|oferta|rechazado|rechazada|descartado|descartada|cancelada|no aplicar|cerrada|duplicado|repost|condicional|hold|monitor)/i.test(col4);
+      const col5LooksLikeStatus = /^(evaluated|applied|responded|interview|offer|rejected|discarded|skip|evaluada|aplicado|respondido|entrevista|oferta|rechazado|rechazada|descartado|descartada|cancelada|no aplicar|cerrada|duplicado|repost|condicional|hold|monitor)/i.test(col5);
 
       let statusCol, scoreCol;
       if (col4LooksLikeStatus && !col4LooksLikeScore) {
@@ -356,6 +367,21 @@ if (newLines.length > 0) {
   }
   if (lastDataIdx >= 0) {
     appLines.splice(lastDataIdx + 1, 0, ...newLines);
+  } else {
+    // Header-only table: find the separator line (contains ---) and insert after it
+    let separatorIdx = -1;
+    for (let i = 0; i < appLines.length; i++) {
+      if (appLines[i].startsWith('|') && appLines[i].includes('---')) {
+        separatorIdx = i;
+        break;
+      }
+    }
+    if (separatorIdx >= 0) {
+      appLines.splice(separatorIdx + 1, 0, ...newLines);
+    } else {
+      // No table structure found: append at end of file
+      appLines.push(...newLines);
+    }
   }
 }
 

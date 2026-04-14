@@ -25,7 +25,8 @@
 
 import https from 'https';
 import { readFileSync, existsSync } from 'fs';
-import { resolve } from 'path';
+import { resolve, join, relative, isAbsolute } from 'path';
+import { pathToFileURL } from 'url';
 
 // -- Load .env (no dotenv dependency) --
 function loadEnv() {
@@ -63,6 +64,10 @@ const content = get('--content');
 const folder  = get('--folder') ?? 'UK Applications';
 
 if (!file || !content) {
+  if (args.includes('--auto')) {
+    // Called by hook without file/content — nothing to sync, exit silently
+    process.exit(0);
+  }
   console.error('Usage: node obsidian-sync.mjs --file "001 - Company.md" --content reports/001-slug.md [--folder "UK Applications"] [options]');
   process.exit(1);
 }
@@ -73,7 +78,9 @@ if (!existsSync(content)) {
 }
 
 // -- Build frontmatter --
-const date      = get('--date')      ?? new Date().toISOString().split('T')[0];
+const _now = new Date();
+const _localDate = `${_now.getFullYear()}-${String(_now.getMonth()+1).padStart(2,'0')}-${String(_now.getDate()).padStart(2,'0')}`;
+const date      = get('--date')      ?? _localDate;
 const company   = get('--company')   ?? '';
 const role      = get('--role')      ?? '';
 const score     = get('--score')     ?? '';
@@ -81,13 +88,26 @@ const status    = get('--status')    ?? 'Evaluated';
 const archetype = get('--archetype') ?? '';
 const url       = get('--url')       ?? '';
 const pdf       = get('--pdf')       ?? 'false';
+const pdfBool   = String(pdf).toLowerCase() === 'true';
+const pdfFile   = get('--pdf-file')  ?? '';
 const geo       = get('--geo')       ?? (folder.startsWith('UK') ? 'UK' : 'US');
 const location  = get('--location')  ?? '';
 const remote    = get('--remote')    ?? '';
 
+// -- YAML scalar escaping --
+function yamlEscape(val) {
+  if (!val) return '""';
+  const escaped = String(val)
+    .replace(/\\/g, '\\\\')
+    .replace(/"/g, '\\"')
+    .replace(/\n/g, '\\n');
+  return `"${escaped}"`;
+}
+
 const statusTagMap = {
   'Evaluated': 'evaluated',
   'Applied': 'applied',
+  'Responded': 'responded',
   'SKIP': 'skip',
   'Rejected': 'rejected',
   'Discarded': 'discarded',
@@ -101,27 +121,72 @@ const frontmatter = [
   'tags:',
   '  - application',
   `  - ${statusTag}`,
-  `  - geo-${geo.toLowerCase()}`,
+  `  - geo-${geo.toLowerCase().replace(/[^a-z0-9]/g, '-')}`,
   ...(remote ? [`  - ${remote.toLowerCase().replace(/[^a-z]/g, '-')}`] : []),
   `date: ${date}`,
-  `geo: ${geo}`,
-  `company: ${company}`,
-  `role: ${role}`,
-  `score: ${score}`,
-  `status: ${status}`,
-  `pdf: ${pdf}`,
-  `archetype: ${archetype}`,
-  `url: ${url}`,
-  ...(location ? [`location: "${location}"`] : []),
-  ...(remote   ? [`remote: ${remote}`]        : []),
+  `geo: ${yamlEscape(geo)}`,
+  `company: ${yamlEscape(company)}`,
+  `role: ${yamlEscape(role)}`,
+  `score: ${yamlEscape(score)}`,
+  `status: ${yamlEscape(status)}`,
+  `pdf: ${pdfBool}`,
+  `archetype: ${yamlEscape(archetype)}`,
+  `url: ${yamlEscape(url)}`,
+  ...(location ? [`location: ${yamlEscape(location)}`] : []),
+  ...(remote   ? [`remote: ${yamlEscape(remote)}`]     : []),
   '---',
   '',
 ].join('\n');
 
-const reportContent = readFileSync(content, 'utf8');
+function getRepoRoot() {
+  const p = resolve('config/profile.yml');
+  if (!existsSync(p)) return '';
+  const m = readFileSync(p, 'utf8').match(/repo_root:\s*"?([^"\n]+)"?/);
+  return m ? m[1].trim() : '';
+}
+const repoRoot = getRepoRoot();
+
+let reportContent = readFileSync(content, 'utf8');
+if (pdfFile && !repoRoot) {
+  console.warn('⚠  --pdf-file provided but paths.repo_root is not set in config/profile.yml — skipping PDF link');
+}
+if (pdfFile && repoRoot) {
+  // Validate: plain filename only (no path separators)
+  if (/[/\\]/.test(pdfFile)) {
+    console.warn(`⚠  Invalid --pdf-file value (path traversal attempt): ${pdfFile}`);
+  } else {
+    const outputDir = join(repoRoot, 'output');
+    const absPath = resolve(join(outputDir, pdfFile));
+    const rel = relative(outputDir, absPath);
+    if (rel.startsWith('..') || isAbsolute(rel)) {
+      console.warn(`⚠  Resolved PDF path escapes output dir — skipping link`);
+    } else if (!existsSync(absPath)) {
+      reportContent = reportContent.replace(
+        /\*\*PDF:\*\*.*/,
+        `**PDF:** ❌ file not found`
+      );
+    } else {
+      const fileUrl = pathToFileURL(absPath).href;
+      const safePdfName = pdfFile.replace(/([[\]()])/g, '\\$1');
+      reportContent = reportContent.replace(
+        /\*\*PDF:\*\*.*/,
+        `**PDF:** ✅ [${safePdfName}](${fileUrl})`
+      );
+    }
+  }
+}
 const noteContent = frontmatter + reportContent;
 
 // -- PUT to vault --
+function hasInvalidVaultSegments(value, { allowSlash = false } = {}) {
+  if (/\\/.test(value)) return true;
+  if (!allowSlash && value.includes('/')) return true;
+  return value.split('/').some(seg => !seg || seg === '.' || seg === '..');
+}
+if (hasInvalidVaultSegments(file) || hasInvalidVaultSegments(folder, { allowSlash: true })) {
+  console.error(`Invalid --file or --folder value (path traversal attempt): ${folder}/${file}`);
+  process.exit(1);
+}
 const encodedPath = `${folder}/${file}`.split('/').map(encodeURIComponent).join('/');
 const body = Buffer.from(noteContent, 'utf8');
 
@@ -144,6 +209,10 @@ const req = https.request(options, (res) => {
   } else {
     console.warn(`⚠  Obsidian sync returned ${res.statusCode} — skipping`);
   }
+});
+
+req.setTimeout(10000, () => {
+  req.destroy(new Error('Request timed out'));
 });
 
 req.on('error', (e) => {

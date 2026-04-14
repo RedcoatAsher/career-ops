@@ -1,3 +1,6 @@
+<!-- @include: modes/_shared.md -->
+<!-- @include: modes/_profile.md -->
+
 # Mode: tracker — Applications Tracker (US Pipeline)
 
 Read and display `data/applications.md`.
@@ -9,7 +12,7 @@ Read and display `data/applications.md`.
 | # | Date | Company | Role | Location | Remote | Score | Status | PDF | Report | Notes |
 ```
 
-- **Location**: city/country from JD (e.g. `San Francisco, CA`, `Remote US`, `London, UK`)
+- **Location**: city/country from JD (e.g. `San Francisco, CA`, `Remote US`, `Seattle, WA`)
 - **Remote**: `remote`, `on-site`, or `unknown`
 
 Canonical statuses: `Evaluated` → `Applied` → `Responded` → `Interview` → `Offer` / `Rejected` / `Discarded` / `SKIP`
