@@ -44,7 +44,7 @@ function validateStatus(status) {
     if (valid.toLowerCase() === lower) return valid;
   }
 
-  // Aliases
+  // Aliases (English + Spanish backwards compat)
   const aliases = {
     // Spanish → English
     'evaluada': 'Evaluated', 'condicional': 'Evaluated', 'hold': 'Evaluated', 'evaluar': 'Evaluated', 'verificar': 'Evaluated',
@@ -72,8 +72,9 @@ function normalizeCompany(name) {
 }
 
 function roleFuzzyMatch(a, b) {
-  const wordsA = a.toLowerCase().split(/\s+/).filter(w => w.length > 3);
-  const wordsB = b.toLowerCase().split(/\s+/).filter(w => w.length > 3);
+  // Keep tokens ≥ 2 chars so 2-char acronyms (AI, ML, QA) are preserved.
+  const wordsA = a.toLowerCase().split(/\s+/).filter(w => w.length > 1);
+  const wordsB = b.toLowerCase().split(/\s+/).filter(w => w.length > 1);
   const overlap = wordsA.filter(w => wordsB.some(wb => wb.includes(w) || w.includes(wb)));
   return overlap.length >= 2;
 }
@@ -93,8 +94,20 @@ function parseAppLine(line) {
   if (parts.length < 9) return null;
   const num = parseInt(parts[1]);
   if (isNaN(num) || num === 0) return null;
+
+  // 13+ parts = 11-col format: # | date | company | role | location | remote | score | status | pdf | report | notes
+  // 9+ parts  = 9-col legacy:  # | date | company | role | score | status | pdf | report | notes
+  if (parts.length >= 13) {
+    return {
+      num, date: parts[2], company: parts[3], role: parts[4],
+      location: parts[5], remote: parts[6],
+      score: parts[7], status: parts[8], pdf: parts[9], report: parts[10],
+      notes: parts[11] || '', raw: line,
+    };
+  }
   return {
     num, date: parts[2], company: parts[3], role: parts[4],
+    location: '', remote: '',
     score: parts[5], status: parts[6], pdf: parts[7], report: parts[8],
     notes: parts[9] || '', raw: line,
   };
@@ -118,18 +131,37 @@ function parseTsvContent(content, filename) {
       console.warn(`⚠️  Skipping malformed pipe-delimited ${filename}: ${parts.length} fields`);
       return null;
     }
-    // Format: num | date | company | role | score | status | pdf | report | notes
-    addition = {
-      num: parseInt(parts[0]),
-      date: parts[1],
-      company: parts[2],
-      role: parts[3],
-      score: parts[4],
-      status: validateStatus(parts[5]),
-      pdf: parts[6],
-      report: parts[7],
-      notes: parts[8] || '',
-    };
+    if (parts.length >= 11) {
+      // 11-col format: num | date | company | role | location | remote | score | status | pdf | report | notes
+      addition = {
+        num: parseInt(parts[0]),
+        date: parts[1],
+        company: parts[2],
+        role: parts[3],
+        location: parts[4],
+        remote: parts[5],
+        score: parts[6],
+        status: validateStatus(parts[7]),
+        pdf: parts[8],
+        report: parts[9],
+        notes: parts[10] || '',
+      };
+    } else {
+      // Legacy 9-col: num | date | company | role | score | status | pdf | report | notes
+      addition = {
+        num: parseInt(parts[0]),
+        date: parts[1],
+        company: parts[2],
+        role: parts[3],
+        location: '',
+        remote: '',
+        score: parts[4],
+        status: validateStatus(parts[5]),
+        pdf: parts[6],
+        report: parts[7],
+        notes: parts[8] || '',
+      };
+    }
   } else {
     // Tab-separated
     parts = content.split('\t');
@@ -138,41 +170,69 @@ function parseTsvContent(content, filename) {
       return null;
     }
 
-    // Detect column order: some TSVs have (status, score), others have (score, status)
-    // Heuristic: if col4 looks like a score and col5 looks like a status, they're swapped
-    const col4 = parts[4].trim();
-    const col5 = parts[5].trim();
-    const col4LooksLikeScore = /^\d+\.?\d*\/5$/.test(col4) || col4 === 'N/A' || col4 === 'DUP';
-    const col5LooksLikeScore = /^\d+\.?\d*\/5$/.test(col5) || col5 === 'N/A' || col5 === 'DUP';
-    const col4LooksLikeStatus = /^(evaluated|applied|responded|interview|offer|rejected|discarded|skip|evaluada|aplicado|respondido|entrevista|oferta|rechazado|descartado|no aplicar|cerrada|duplicado|repost|condicional|hold|monitor)/i.test(col4);
-    const col5LooksLikeStatus = /^(evaluated|applied|responded|interview|offer|rejected|discarded|skip|evaluada|aplicado|respondido|entrevista|oferta|rechazado|descartado|no aplicar|cerrada|duplicado|repost|condicional|hold|monitor)/i.test(col5);
-
-    let statusCol, scoreCol;
-    if (col4LooksLikeStatus && !col4LooksLikeScore) {
-      // Standard format: col4=status, col5=score
-      statusCol = col4; scoreCol = col5;
-    } else if (col4LooksLikeScore && col5LooksLikeStatus) {
-      // Swapped format: col4=score, col5=status
-      statusCol = col5; scoreCol = col4;
-    } else if (col5LooksLikeScore && !col4LooksLikeScore) {
-      // col5 is definitely score → col4 must be status
-      statusCol = col4; scoreCol = col5;
+    if (parts.length >= 11) {
+      // New 11-col TSV: num\tdate\tcompany\trole\tlocation\tremote\tstatus\tscore\tpdf\treport\tnotes
+      const statusRaw = parts[6].trim();
+      const scoreRaw  = parts[7].trim();
+      const statusLooksLikeScore = /^\d+\.?\d*\/5$/.test(statusRaw) || statusRaw === 'N/A';
+      const scoreLooksLikeStatus = /^(evaluated|applied|responded|interview|offer|rejected|discarded|skip|evaluada|aplicado|respondido|entrevista|oferta|rechazado|rechazada|descartado|descartada|cancelada|no aplicar)/i.test(scoreRaw);
+      // Swap heuristic: if col 7 looks like a score (not a status word) we use it as-is;
+      // if col 7 looks like a status word, or col 8 looks like a status word, columns are swapped.
+      // statusLooksLikeScore: col 7 has "4.2/5" → the columns are in reversed order
+      // scoreLooksLikeStatus: col 8 has a status word → same reversal from the other direction
+      addition = {
+        num: parseInt(parts[0]),
+        date: parts[1],
+        company: parts[2],
+        role: parts[3],
+        location: parts[4],
+        remote: parts[5],
+        status: validateStatus(
+          statusLooksLikeScore ? scoreRaw :
+          scoreLooksLikeStatus ? scoreRaw :
+          statusRaw
+        ),
+        score: statusLooksLikeScore ? statusRaw :
+               scoreLooksLikeStatus ? statusRaw :
+               scoreRaw,
+        pdf: parts[8],
+        report: parts[9],
+        notes: parts[10] || '',
+      };
     } else {
-      // Default: standard format (status before score)
-      statusCol = col4; scoreCol = col5;
-    }
+      // Legacy 9-col TSV: detect column order heuristically
+      const col4 = parts[4].trim();
+      const col5 = parts[5].trim();
+      const col4LooksLikeScore = /^\d+\.?\d*\/5$/.test(col4) || col4 === 'N/A' || col4 === 'DUP';
+      const col5LooksLikeScore = /^\d+\.?\d*\/5$/.test(col5) || col5 === 'N/A' || col5 === 'DUP';
+      const col4LooksLikeStatus = /^(evaluated|applied|responded|interview|offer|rejected|discarded|skip|evaluada|aplicado|respondido|entrevista|oferta|rechazado|rechazada|descartado|descartada|cancelada|no aplicar|cerrada|duplicado|repost|condicional|hold|monitor)/i.test(col4);
+      const col5LooksLikeStatus = /^(evaluated|applied|responded|interview|offer|rejected|discarded|skip|evaluada|aplicado|respondido|entrevista|oferta|rechazado|rechazada|descartado|descartada|cancelada|no aplicar|cerrada|duplicado|repost|condicional|hold|monitor)/i.test(col5);
 
-    addition = {
-      num: parseInt(parts[0]),
-      date: parts[1],
-      company: parts[2],
-      role: parts[3],
-      status: validateStatus(statusCol),
-      score: scoreCol,
-      pdf: parts[6],
-      report: parts[7],
-      notes: parts[8] || '',
-    };
+      let statusCol, scoreCol;
+      if (col4LooksLikeStatus && !col4LooksLikeScore) {
+        statusCol = col4; scoreCol = col5;
+      } else if (col4LooksLikeScore && col5LooksLikeStatus) {
+        statusCol = col5; scoreCol = col4;
+      } else if (col5LooksLikeScore && !col4LooksLikeScore) {
+        statusCol = col4; scoreCol = col5;
+      } else {
+        statusCol = col4; scoreCol = col5;
+      }
+
+      addition = {
+        num: parseInt(parts[0]),
+        date: parts[1],
+        company: parts[2],
+        role: parts[3],
+        location: '',
+        remote: '',
+        status: validateStatus(statusCol),
+        score: scoreCol,
+        pdf: parts[6],
+        report: parts[7],
+        notes: parts[8] || '',
+      };
+    }
   }
 
   if (isNaN(addition.num) || addition.num === 0) {
@@ -274,7 +334,9 @@ for (const file of tsvFiles) {
       console.log(`🔄 Update: #${duplicate.num} ${addition.company} — ${addition.role} (${oldScore}→${newScore})`);
       const lineIdx = appLines.indexOf(duplicate.raw);
       if (lineIdx >= 0) {
-        const updatedLine = `| ${duplicate.num} | ${addition.date} | ${addition.company} | ${addition.role} | ${addition.score} | ${duplicate.status} | ${duplicate.pdf} | ${addition.report} | Re-eval ${addition.date} (${oldScore}→${newScore}). ${addition.notes} |`;
+        const loc = addition.location || duplicate.location || '';
+        const rem = addition.remote  || duplicate.remote  || '';
+        const updatedLine = `| ${duplicate.num} | ${addition.date} | ${addition.company} | ${addition.role} | ${loc} | ${rem} | ${addition.score} | ${duplicate.status} | ${duplicate.pdf} | ${addition.report} | Re-eval ${addition.date} (${oldScore}→${newScore}). ${addition.notes} |`;
         appLines[lineIdx] = updatedLine;
         updated++;
       }
@@ -287,25 +349,39 @@ for (const file of tsvFiles) {
     const entryNum = addition.num > maxNum ? addition.num : ++maxNum;
     if (addition.num > maxNum) maxNum = addition.num;
 
-    const newLine = `| ${entryNum} | ${addition.date} | ${addition.company} | ${addition.role} | ${addition.score} | ${addition.status} | ${addition.pdf} | ${addition.report} | ${addition.notes} |`;
+    const newLine = `| ${entryNum} | ${addition.date} | ${addition.company} | ${addition.role} | ${addition.location || ''} | ${addition.remote || ''} | ${addition.score} | ${addition.status} | ${addition.pdf} | ${addition.report} | ${addition.notes} |`;
     newLines.push(newLine);
     added++;
     console.log(`➕ Add #${entryNum}: ${addition.company} — ${addition.role} (${addition.score})`);
   }
 }
 
-// Insert new lines after the header (line index of first data row)
+// Append new lines after the last data row (end of table)
 if (newLines.length > 0) {
-  // Find header separator (|---|...) and insert after it
-  let insertIdx = -1;
-  for (let i = 0; i < appLines.length; i++) {
-    if (appLines[i].includes('---') && appLines[i].startsWith('|')) {
-      insertIdx = i + 1;
-      break;
+  let lastDataIdx = -1;
+  for (let i = appLines.length - 1; i >= 0; i--) {
+    if (appLines[i].startsWith('|') && !appLines[i].includes('---') && !appLines[i].includes('Company')) {
+      const num = parseInt(appLines[i].split('|')[1]);
+      if (!isNaN(num)) { lastDataIdx = i; break; }
     }
   }
-  if (insertIdx >= 0) {
-    appLines.splice(insertIdx, 0, ...newLines);
+  if (lastDataIdx >= 0) {
+    appLines.splice(lastDataIdx + 1, 0, ...newLines);
+  } else {
+    // Header-only table: find the separator line (contains ---) and insert after it
+    let separatorIdx = -1;
+    for (let i = 0; i < appLines.length; i++) {
+      if (appLines[i].startsWith('|') && appLines[i].includes('---')) {
+        separatorIdx = i;
+        break;
+      }
+    }
+    if (separatorIdx >= 0) {
+      appLines.splice(separatorIdx + 1, 0, ...newLines);
+    } else {
+      // No table structure found: append at end of file
+      appLines.push(...newLines);
+    }
   }
 }
 

@@ -117,6 +117,10 @@ search_queries:
     query: 'site:jobs.ashbyhq.com "Agentic" OR "AI Agent" OR "Automation Architect" remote'
     enabled: true
 
+  - name: Ashby — Design Leadership
+    query: 'site:jobs.ashbyhq.com "Head of Design" OR "Head of Product Design" OR "Director of Design" OR "Director of Product Design" OR "VP of Design" OR "VP Design" OR "Principal Designer" OR "Principal Product Designer" OR "Staff Designer"'
+    enabled: true
+
   # -- Greenhouse --
   - name: Greenhouse — AI PM
     query: 'site:boards.greenhouse.io OR site:job-boards.greenhouse.io "AI Product Manager" OR "Senior Product Manager" AI remote'
@@ -133,6 +137,10 @@ search_queries:
   # -- Workable --
   - name: Workable — AI Roles
     query: 'site:apply.workable.com "AI" "Product Manager" OR "Solutions Architect" OR "AI Engineer" remote'
+    enabled: true
+
+  - name: Workable — Design Leadership
+    query: 'site:apply.workable.com "Head of Design" OR "Head of Product Design" OR "Director of Design" OR "VP of Design" OR "Principal Designer" OR "Principal Product Designer"'
     enabled: true
 
   # -- No-Code / Low-Code / Automation --
@@ -271,6 +279,22 @@ search_queries:
 
   - name: HN Who's Hiring — Remote AI
     query: 'site:news.ycombinator.com OR site:hnrss.org "AI Engineer" OR "Forward Deployed" OR "DevRel" OR "Founding Engineer" remote'
+  # -- Generalist World (aggregator) --
+  - name: Generalist World — AI & Leadership
+    query: 'site:generalist.world/jobs "AI" OR "Head of" OR "Director" OR "VP" OR "Solutions" OR "Automation" remote'
+    enabled: true
+
+  - name: Generalist World — Design Leadership
+    query: 'site:generalist.world/jobs "Head of Design" OR "Head of Product Design" OR "Director of Design" OR "Director of Product Design" OR "VP of Design" OR "Principal Designer" OR "Principal Product Designer"'
+    enabled: true
+
+  # -- Remote Rocketship (aggregator) --
+  - name: Remote Rocketship — AI & Automation
+    query: 'site:remoterocketship.com "AI" OR "LLM" OR "Solutions Engineer" OR "Automation" OR "Forward Deployed" remote'
+    enabled: true
+
+  - name: Remote Rocketship — Design Leadership
+    query: 'site:remoterocketship.com "Head of Design" OR "Head of Product Design" OR "Director of Design" OR "Director of Product Design" OR "VP of Design" OR "Principal Designer" OR "Principal Product Designer"'
     enabled: true
 
 # -- Tracked companies --

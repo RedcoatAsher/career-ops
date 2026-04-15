@@ -6,7 +6,7 @@
  * 1. All statuses are canonical (per states.yml)
  * 2. No duplicate company+role entries
  * 3. All report links point to existing files
- * 4. Scores match format X.XX/5 or N/A or DUP
+ * 4. Scores match format X.XX (numeric) or N/A or DUP
  * 5. All rows have proper pipe-delimited format
  * 6. No pending TSVs in tracker-additions/ (only in merged/ or archived/)
  * 7. states.yml canonical IDs for cross-system consistency
@@ -72,11 +72,23 @@ for (const line of lines) {
   if (parts.length < 9) continue;
   const num = parseInt(parts[1]);
   if (isNaN(num)) continue;
-  entries.push({
-    num, date: parts[2], company: parts[3], role: parts[4],
-    score: parts[5], status: parts[6], pdf: parts[7], report: parts[8],
-    notes: parts[9] || '',
-  });
+  // 13+ parts = 11-col format: # | date | company | role | location | remote | score | status | pdf | report | notes
+  // 9+ parts  = 9-col legacy:  # | date | company | role | score | status | pdf | report | notes
+  if (parts.length >= 13) {
+    entries.push({
+      num, date: parts[2], company: parts[3], role: parts[4],
+      location: parts[5], remote: parts[6],
+      score: parts[7], status: parts[8], pdf: parts[9], report: parts[10],
+      notes: parts[11] || '',
+    });
+  } else {
+    entries.push({
+      num, date: parts[2], company: parts[3], role: parts[4],
+      location: '', remote: '',
+      score: parts[5], status: parts[6], pdf: parts[7], report: parts[8],
+      notes: parts[9] || '',
+    });
+  }
 }
 
 console.log(`\n📊 Checking ${entries.length} entries in applications.md\n`);
@@ -130,6 +142,12 @@ for (const e of entries) {
   const match = e.report.match(/\]\(([^)]+)\)/);
   if (!match) continue;
   const reportPath = join(CAREER_OPS, match[1]);
+  // Guard against path traversal (e.g. ../../outside.md)
+  if (!reportPath.startsWith(REPORTS_DIR + '/') && !reportPath.startsWith(REPORTS_DIR + '\\')) {
+    error(`#${e.num}: Report path escapes reports/ directory: ${match[1]}`);
+    brokenReports++;
+    continue;
+  }
   if (!existsSync(reportPath)) {
     error(`#${e.num}: Report not found: ${match[1]}`);
     brokenReports++;
@@ -141,7 +159,7 @@ if (brokenReports === 0) ok('All report links valid');
 let badScores = 0;
 for (const e of entries) {
   const s = e.score.replace(/\*\*/g, '').trim();
-  if (!/^\d+\.?\d*\/5$/.test(s) && s !== 'N/A' && s !== 'DUP') {
+  if (!/^\d+\.?\d*$/.test(s) && s !== 'N/A' && s !== 'DUP' && s !== '—') {
     error(`#${e.num}: Invalid score format: "${e.score}"`);
     badScores++;
   }

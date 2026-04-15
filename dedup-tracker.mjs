@@ -2,11 +2,15 @@
 /**
  * dedup-tracker.mjs — Remove duplicate entries from applications.md
  *
- * Groups by normalized company + fuzzy role match.
- * Keeps entry with highest score. If discarded entry had more advanced status,
- * preserves that status. Merges notes.
+ * Groups by normalized company. Within each company, flags entries as
+ * duplicates if:
+ *   - Role Jaccard similarity >= 0.75 (on tokens with length > 3)
+ *   - AND normalized locations match (or both are empty/unknown)
  *
- * Run: node career-ops/dedup-tracker.mjs [--dry-run]
+ * Keeps entry with highest score. If a removed entry had a more advanced
+ * pipeline status, promotes the keeper's status.
+ *
+ * Run: node dedup-tracker.mjs [--dry-run]
  */
 
 import { readFileSync, writeFileSync, copyFileSync, existsSync, mkdirSync } from 'fs';
@@ -57,65 +61,92 @@ function normalizeCompany(name) {
     .trim();
 }
 
-function normalizeRole(role) {
-  return role.toLowerCase()
-    .replace(/[()]/g, ' ')
-    .replace(/\s+/g, ' ')
-    .replace(/[^a-z0-9 /]/g, '')
-    .trim();
+function normalizeLocation(loc) {
+  return (loc || '').toLowerCase().replace(/\s+/g, ' ').trim();
 }
 
-const ROLE_STOPWORDS = new Set([
-  'senior', 'junior', 'lead', 'staff', 'principal', 'head', 'chief',
-  'manager', 'director', 'associate', 'intern', 'contractor',
-  'remote', 'hybrid', 'onsite',
-  'engineer', 'engineering',
-]);
-
-const LOCATION_STOPWORDS = new Set([
-  'tokyo', 'japan', 'london', 'berlin', 'paris', 'singapore',
-  'york', 'francisco', 'angeles', 'seattle', 'austin', 'boston',
-  'chicago', 'denver', 'toronto', 'amsterdam', 'dublin', 'sydney',
-  'remote', 'global', 'emea', 'apac', 'latam',
-]);
-
+// Jaccard similarity on role tokens with length > 3.
+// Threshold 0.75 avoids false positives from role specialisations like
+// "Applied AI Engineer, Seoul" vs "Applied AI Engineer, Startups".
 function roleMatch(a, b) {
-  const filterStopwords = (words) =>
-    words.filter(w => !ROLE_STOPWORDS.has(w) && !LOCATION_STOPWORDS.has(w));
+  // Keep tokens ≥ 2 chars so 2-char acronyms (AI, ML, QA) are preserved.
+  // Without this, "AI Engineer" and "ML Engineer" both collapse to {"engineer"}
+  // and score 1.0 Jaccard — incorrectly flagged as duplicates.
+  const tokensA = new Set(
+    a.toLowerCase().replace(/[^a-z0-9 ]/g, ' ').split(/\s+/).filter(w => w.length > 1)
+  );
+  const tokensB = new Set(
+    b.toLowerCase().replace(/[^a-z0-9 ]/g, ' ').split(/\s+/).filter(w => w.length > 1)
+  );
+  if (tokensA.size === 0 || tokensB.size === 0) return false;
+  const intersection = [...tokensA].filter(w => tokensB.has(w)).length;
+  const union = new Set([...tokensA, ...tokensB]).size;
+  return (intersection / union) >= 0.75;
+}
 
-  const wordsA = filterStopwords(normalizeRole(a).split(/\s+/).filter(w => w.length > 2));
-  const wordsB = filterStopwords(normalizeRole(b).split(/\s+/).filter(w => w.length > 2));
-
-  if (wordsA.length === 0 || wordsB.length === 0) return false;
-
-  const overlap = wordsA.filter(w => wordsB.some(wb => wb === w));
-  const smaller = Math.min(wordsA.length, wordsB.length);
-  const ratio = overlap.length / smaller;
-
-  return overlap.length >= 2 && ratio >= 0.6;
+// Locations must be equal to be a match.
+// Both empty/unknown → conservatively allow match (can't distinguish).
+// One known, one unknown → treat as different postings.
+function locationMatch(a, b) {
+  const la = normalizeLocation(a);
+  const lb = normalizeLocation(b);
+  const unknownA = !la || la === 'unknown';
+  const unknownB = !lb || lb === 'unknown';
+  if (unknownA && unknownB) return true;
+  if (unknownA || unknownB) return false;
+  return la === lb;
 }
 
 function parseScore(s) {
-  const m = s.replace(/\*\*/g, '').match(/([\d.]+)/);
+  const m = (s || '').replace(/\*\*/g, '').match(/([\d.]+)/);
   return m ? parseFloat(m[1]) : 0;
 }
 
+// Table columns (0-indexed after split on '|', trimmed):
+// 11-col (current):
+//   [0]='' [1]=# [2]=Date [3]=Company [4]=Role [5]=Location [6]=Remote
+//   [7]=Score [8]=Status [9]=PDF [10]=Report [11]=Notes [12]=''
+// 9-col (legacy, no Location/Remote):
+//   [0]='' [1]=# [2]=Date [3]=Company [4]=Role [5]=Score [6]=Status
+//   [7]=PDF [8]=Report [9]=Notes [10]=''
 function parseAppLine(line) {
   const parts = line.split('|').map(s => s.trim());
   if (parts.length < 9) return null;
   const num = parseInt(parts[1]);
-  if (isNaN(num)) return null;
+  if (isNaN(num) || num === 0) return null;
+
+  if (parts.length >= 13) {
+    return {
+      num,
+      date:      parts[2],
+      company:   parts[3],
+      role:      parts[4],
+      location:  parts[5],
+      remote:    parts[6],
+      score:     parts[7],
+      status:    parts[8],
+      pdf:       parts[9],
+      report:    parts[10],
+      notes:     parts[11] || '',
+      raw:       line,
+      colFormat: 11,
+    };
+  }
+  // Legacy 9-col
   return {
     num,
-    date: parts[2],
-    company: parts[3],
-    role: parts[4],
-    score: parts[5],
-    status: parts[6],
-    pdf: parts[7],
-    report: parts[8],
-    notes: parts[9] || '',
-    raw: line,
+    date:      parts[2],
+    company:   parts[3],
+    role:      parts[4],
+    location:  '',
+    remote:    '',
+    score:     parts[5],
+    status:    parts[6],
+    pdf:       parts[7],
+    report:    parts[8],
+    notes:     parts[9] || '',
+    raw:       line,
+    colFormat: 9,
   };
 }
 
@@ -142,7 +173,7 @@ for (let i = 0; i < lines.length; i++) {
 
 console.log(`📊 ${entries.length} entries loaded`);
 
-// Group by company+role
+// Group by company
 const groups = new Map();
 for (const entry of entries) {
   const key = normalizeCompany(entry.company);
@@ -154,10 +185,9 @@ for (const entry of entries) {
 let removed = 0;
 const linesToRemove = new Set();
 
-for (const [company, companyEntries] of groups) {
+for (const [, companyEntries] of groups) {
   if (companyEntries.length < 2) continue;
 
-  // Within same company, find role matches
   const processed = new Set();
   for (let i = 0; i < companyEntries.length; i++) {
     if (processed.has(i)) continue;
@@ -166,7 +196,10 @@ for (const [company, companyEntries] of groups) {
 
     for (let j = i + 1; j < companyEntries.length; j++) {
       if (processed.has(j)) continue;
-      if (roleMatch(companyEntries[i].role, companyEntries[j].role)) {
+      if (
+        roleMatch(companyEntries[i].role, companyEntries[j].role) &&
+        locationMatch(companyEntries[i].location, companyEntries[j].location)
+      ) {
         cluster.push(companyEntries[j]);
         processed.add(j);
       }
@@ -174,46 +207,47 @@ for (const [company, companyEntries] of groups) {
 
     if (cluster.length < 2) continue;
 
-    // Keep the one with highest score
+    // Keep highest score
     cluster.sort((a, b) => parseScore(b.score) - parseScore(a.score));
     const keeper = cluster[0];
 
-    // Check if any removed entry has more advanced status
-    let bestStatusRank = STATUS_RANK[keeper.status.toLowerCase()] || 0;
+    // Promote keeper's status if a removed entry had a more advanced one
+    let bestStatusRank = STATUS_RANK[keeper.status.toLowerCase()] ?? 0;
     let bestStatus = keeper.status;
     for (let k = 1; k < cluster.length; k++) {
-      const rank = STATUS_RANK[cluster[k].status.toLowerCase()] || 0;
+      const rank = STATUS_RANK[cluster[k].status.toLowerCase()] ?? 0;
       if (rank > bestStatusRank) {
         bestStatusRank = rank;
         bestStatus = cluster[k].status;
       }
     }
 
-    // Update keeper's status if a removed entry had a more advanced one
     if (bestStatus !== keeper.status) {
       const lineIdx = entryLineMap.get(keeper.num);
       if (lineIdx !== undefined) {
         const parts = lines[lineIdx].split('|').map(s => s.trim());
-        parts[6] = bestStatus;
+        const statusCol = keeper.colFormat === 11 ? 8 : 6;
+        parts[statusCol] = bestStatus;
         lines[lineIdx] = '| ' + parts.slice(1, -1).join(' | ') + ' |';
-        console.log(`  📝 #${keeper.num}: status promoted to "${bestStatus}" (from #${cluster.find(e => e.status === bestStatus)?.num})`);
+        const src = cluster.find(e => e.status === bestStatus);
+        console.log(`  📝 #${keeper.num}: status promoted to "${bestStatus}" (from #${src?.num})`);
       }
     }
 
-    // Remove duplicates
+    // Remove lower-score duplicates
     for (let k = 1; k < cluster.length; k++) {
       const dup = cluster[k];
       const lineIdx = entryLineMap.get(dup.num);
       if (lineIdx !== undefined) {
         linesToRemove.add(lineIdx);
         removed++;
-        console.log(`🗑️  Remove #${dup.num} (${dup.company} — ${dup.role}, ${dup.score}) → kept #${keeper.num} (${keeper.score})`);
+        console.log(`🗑️  Remove #${dup.num} (${dup.company} — ${dup.role} @ ${dup.location || 'unknown'}, ${dup.score}) → kept #${keeper.num}`);
       }
     }
   }
 }
 
-// Remove lines (in reverse order to preserve indices)
+// Remove lines in reverse order to preserve indices
 const sortedRemoveIndices = [...linesToRemove].sort((a, b) => b - a);
 for (const idx of sortedRemoveIndices) {
   lines.splice(idx, 1);

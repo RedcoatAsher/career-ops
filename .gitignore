@@ -18,9 +18,11 @@ jds/*
 # User config and customization (never auto-updated)
 config/profile.yml
 portals.yml
-modes/_profile.md
 .update-dismissed
 .update-lock
+.env
+cv.md
+modes/_profile.md
 
 # Generated
 .resolved-prompt-*
