@@ -94,3 +94,25 @@ func TestRenderAppLineIncludesDateColumn(t *testing.T) {
 		t.Fatalf("expected rendered line to include date column, got %q", line)
 	}
 }
+
+func TestRenderAppLineEmptyDateFallback(t *testing.T) {
+	pm := NewPipelineModel(
+		theme.NewTheme("catppuccin-mocha"),
+		nil,
+		model.PipelineMetrics{},
+		"",
+		120,
+		40,
+	)
+
+	line := pm.renderAppLine(model.CareerApplication{
+		Company: "Anthropic",
+		Role:    "Forward Deployed Engineer",
+		Status:  "Applied",
+		Score:   4.5,
+	}, false)
+
+	if !strings.Contains(line, "—") {
+		t.Fatalf("expected empty date to render as '—', got %q", line)
+	}
+}
