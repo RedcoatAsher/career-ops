@@ -73,6 +73,7 @@ Use the template in `cv-template.html`. Replace `{{...}}` placeholders with cust
 | `{{LANG}}` | `en` or `es` |
 | `{{PAGE_WIDTH}}` | `8.5in` (letter) or `210mm` (A4) |
 | `{{NAME}}` | (from profile.yml) |
+| `{{PHONE}}` | (from config/profile.yml — replace with phone value when present; omit the entire `<span>` including its nested separator when `config/profile.yml` has no `phone` value) |
 | `{{EMAIL}}` | (from profile.yml) |
 | `{{LINKEDIN_URL}}` | [from profile.yml] |
 | `{{LINKEDIN_DISPLAY}}` | [from profile.yml] |
