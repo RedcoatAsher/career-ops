@@ -77,7 +77,7 @@ func TestRenderAppLineIncludesDateColumn(t *testing.T) {
 		theme.NewTheme("catppuccin-mocha"),
 		nil,
 		model.PipelineMetrics{},
-		"..",
+		"",
 		120,
 		40,
 	)
