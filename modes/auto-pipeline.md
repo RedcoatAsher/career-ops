@@ -77,10 +77,12 @@ Column order: `# | Date | Company | Role | Location | Remote | Score | Status | 
 
 Write the application note to the `_jobSeeking` vault so the Dataview dashboard picks it up.
 
-**Determine folder:**
-- Job US/Americas or explicitly Remote-US → `US Applications`
-- Job UK/Europe/EMEA → `UK Applications`
-- Unknown / fully remote → `US Applications` (default for this branch)
+**Determine folder and geo:**
+
+Use the `detected_geo` from Step 1 (oferta evaluation, Step 0.5). Look up `config/geo-regions.yml`:
+- `regions.{detected_geo}.obsidian_folder` → folder name (e.g. "US Applications", "EU Applications", "DACH Applications")
+- If `detected_geo` was not set, fall back to `default_geo` from `config/profile.yml`
+- If geo-regions.yml is unavailable: US/Americas → `US Applications`, UK/Europe/EMEA → `UK Applications`, unknown → `US Applications`
 
 **File name:** `{###} - {Company Name}.md` (e.g. `002 - Anthropic.md`)
 
@@ -89,8 +91,8 @@ Write the application note to the `_jobSeeking` vault so the Dataview dashboard 
 node obsidian-sync.mjs \
   --file "{###} - {Company Name}.md" \
   --content "reports/{###}-{slug}-{date}.md" \
-  --folder "{US Applications|UK Applications}" \
-  --geo "{US|UK}" \
+  --folder "{folder from geo-regions.yml}" \
+  --geo "{detected_geo}" \
   --company "{Company}" \
   --role "{Role Title}" \
   --score "{X.X}" \

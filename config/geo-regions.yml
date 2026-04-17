@@ -1,0 +1,294 @@
+# Geo region definitions — single source of truth for all geo routing.
+# Add a new region here and it flows to obsidian-sync, evaluation modes, and PDF generation.
+#
+# Used by:
+#   - obsidian-sync.mjs (folder + geo tag resolution)
+#   - modes/oferta.md Step 0.5 (JD geo auto-detection)
+#   - modes/auto-pipeline.md Step 6 (Obsidian folder routing)
+#   - modes/pdf.md Step 5 (paper format selection)
+#   - cv/build-cv.mjs (geo overlay selection)
+
+default_fallback: US
+
+regions:
+  US:
+    label: "United States"
+    obsidian_folder: "US Applications"
+    paper_format: letter
+    currency: USD
+    currency_symbol: "$"
+    spelling: en-US
+    detection_signals:
+      locations:
+        - "United States"
+        - "USA"
+        - "US-based"
+        - "US only"
+        - "US-remote"
+      cities:
+        - "New York"
+        - "San Francisco"
+        - "Los Angeles"
+        - "Chicago"
+        - "Austin"
+        - "Seattle"
+        - "Boston"
+        - "Nashville"
+        - "Denver"
+        - "Miami"
+        - "Atlanta"
+        - "Dallas"
+        - "Houston"
+        - "San Diego"
+        - "Portland"
+        - "Washington DC"
+        - "Raleigh"
+        - "Pittsburgh"
+        - "Minneapolis"
+        - "Salt Lake City"
+        - "Phoenix"
+      states:
+        - "CA"
+        - "NY"
+        - "TX"
+        - "WA"
+        - "MA"
+        - "CO"
+        - "FL"
+        - "GA"
+        - "IL"
+        - "TN"
+        - "NC"
+        - "PA"
+        - "OR"
+        - "UT"
+        - "AZ"
+        - "MN"
+        - "VA"
+      currency_patterns:
+        - "$"
+        - "USD"
+        - "k base"
+        - "k OTE"
+      visa_keywords:
+        - "US work authorization"
+        - "US citizen"
+        - "green card"
+        - "H-1B"
+        - "ITAR"
+        - "authorized to work in the United States"
+      regulatory:
+        - "EEOC"
+        - "ADA"
+        - "FLSA"
+        - "at-will"
+        - "E-Verify"
+
+  UK:
+    label: "United Kingdom"
+    obsidian_folder: "UK Applications"
+    paper_format: a4
+    currency: GBP
+    currency_symbol: "£"
+    spelling: en-GB
+    detection_signals:
+      locations:
+        - "United Kingdom"
+        - "UK-based"
+        - "UK only"
+        - "Britain"
+        - "England"
+        - "Scotland"
+        - "Wales"
+        - "Northern Ireland"
+      cities:
+        - "London"
+        - "Manchester"
+        - "Birmingham"
+        - "Edinburgh"
+        - "Bristol"
+        - "Cambridge"
+        - "Oxford"
+        - "Leeds"
+        - "Glasgow"
+        - "Belfast"
+        - "Liverpool"
+        - "Reading"
+      currency_patterns:
+        - "£"
+        - "GBP"
+      visa_keywords:
+        - "right to work in the UK"
+        - "UK work authorization"
+        - "Skilled Worker visa"
+        - "UK citizen"
+        - "settled status"
+      regulatory:
+        - "Companies House"
+        - "HMRC"
+        - "FCA"
+        - "ICO"
+
+  EU:
+    label: "European Union"
+    obsidian_folder: "EU Applications"
+    paper_format: a4
+    currency: EUR
+    currency_symbol: "€"
+    spelling: en-GB
+    detection_signals:
+      locations:
+        - "European Union"
+        - "EU-based"
+        - "EU only"
+        - "EMEA"
+        - "Europe"
+      cities:
+        - "Amsterdam"
+        - "Paris"
+        - "Dublin"
+        - "Barcelona"
+        - "Madrid"
+        - "Stockholm"
+        - "Helsinki"
+        - "Lisbon"
+        - "Prague"
+        - "Warsaw"
+        - "Copenhagen"
+        - "Milan"
+        - "Rome"
+        - "Brussels"
+        - "Luxembourg"
+        - "Tallinn"
+      currency_patterns:
+        - "€"
+        - "EUR"
+      visa_keywords:
+        - "EU work permit"
+        - "EU citizen"
+        - "right to work in the EU"
+        - "Blue Card"
+        - "EU/EEA"
+      regulatory:
+        - "GDPR"
+
+  DACH:
+    label: "DACH (Germany/Austria/Switzerland)"
+    obsidian_folder: "DACH Applications"
+    paper_format: a4
+    currency: EUR
+    currency_symbol: "€"
+    spelling: en-GB
+    parent: EU
+    detection_signals:
+      locations:
+        - "Germany"
+        - "Austria"
+        - "Switzerland"
+        - "DACH"
+        - "Deutschland"
+        - "Österreich"
+        - "Schweiz"
+      cities:
+        - "Berlin"
+        - "Munich"
+        - "Zurich"
+        - "Vienna"
+        - "Hamburg"
+        - "Frankfurt"
+        - "Cologne"
+        - "Stuttgart"
+        - "Düsseldorf"
+        - "Basel"
+        - "Bern"
+        - "Graz"
+        - "Salzburg"
+      currency_patterns:
+        - "€"
+        - "EUR"
+        - "CHF"
+      visa_keywords:
+        - "German work permit"
+        - "Swiss work permit"
+        - "Aufenthaltstitel"
+        - "Arbeitsbewilligung"
+      regulatory:
+        - "Betriebsrat"
+        - "AGG"
+        - "Tarifvertrag"
+
+  LATAM:
+    label: "Latin America"
+    obsidian_folder: "LATAM Applications"
+    paper_format: letter
+    currency: USD
+    currency_symbol: "$"
+    spelling: en-US
+    detection_signals:
+      locations:
+        - "Latin America"
+        - "LATAM"
+        - "LatAm"
+        - "South America"
+        - "Central America"
+        - "Mexico"
+        - "Brazil"
+        - "Argentina"
+        - "Colombia"
+        - "Chile"
+      cities:
+        - "Mexico City"
+        - "São Paulo"
+        - "Buenos Aires"
+        - "Bogotá"
+        - "Santiago"
+        - "Lima"
+        - "Medellín"
+        - "Monterrey"
+        - "Guadalajara"
+      currency_patterns:
+        - "MXN"
+        - "BRL"
+        - "CLP"
+        - "COP"
+        - "ARS"
+      visa_keywords: []
+      regulatory: []
+
+  APAC:
+    label: "Asia-Pacific"
+    obsidian_folder: "APAC Applications"
+    paper_format: a4
+    currency: USD
+    currency_symbol: "$"
+    spelling: en-US
+    detection_signals:
+      locations:
+        - "Asia Pacific"
+        - "APAC"
+        - "Asia-Pacific"
+        - "Southeast Asia"
+      cities:
+        - "Singapore"
+        - "Tokyo"
+        - "Sydney"
+        - "Melbourne"
+        - "Hong Kong"
+        - "Bangalore"
+        - "Seoul"
+        - "Taipei"
+        - "Jakarta"
+        - "Bangkok"
+        - "Manila"
+        - "Auckland"
+      currency_patterns:
+        - "SGD"
+        - "AUD"
+        - "JPY"
+        - "HKD"
+        - "INR"
+        - "KRW"
+        - "TWD"
+        - "NZD"
+      visa_keywords: []
+      regulatory: []

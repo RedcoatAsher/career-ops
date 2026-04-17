@@ -9,8 +9,8 @@
  *
  * Usage (local only):
  *   node scripts/aggregate-legacy-roles.mjs \
- *     --uk /Volumes/marlo/Users/asher/_github/career-ops/dev-uk \
- *     --us /Volumes/marlo/Users/asher/_github/career-ops/dev-us \
+ *     --uk /path/to/career-ops/dev-uk \
+ *     --us /path/to/career-ops/dev-us \
  *     [--out cv/_roles-discovered.md]
  */
 

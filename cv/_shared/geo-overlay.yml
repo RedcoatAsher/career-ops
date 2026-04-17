@@ -18,3 +18,39 @@ UK:
   spelling: en-GB
   address_line: "London, UK"
   locale_label: "United Kingdom"
+
+# -- Stubs for new regions. Fill in your details for each market. --
+
+EU:
+  phone: "+1 (323) 484-4029"
+  citizenship_order:
+    - "US Citizen"
+    - "UK Citizen"
+  spelling: en-GB
+  address_line: "Remote"
+  locale_label: "European Union"
+
+DACH:
+  phone: "+1 (323) 484-4029"
+  citizenship_order:
+    - "US Citizen"
+    - "UK Citizen"
+  spelling: en-GB
+  address_line: "Remote"
+  locale_label: "DACH"
+
+LATAM:
+  phone: "+1 (323) 484-4029"
+  citizenship_order:
+    - "US Citizen"
+  spelling: en-US
+  address_line: "Remote"
+  locale_label: "Latin America"
+
+APAC:
+  phone: "+1 (323) 484-4029"
+  citizenship_order:
+    - "US Citizen"
+  spelling: en-US
+  address_line: "Remote"
+  locale_label: "Asia-Pacific"

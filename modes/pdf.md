@@ -10,8 +10,8 @@
 3. Extract 15-20 keywords from the JD
 4. Detect JD language → CV language (EN default)
 5. Detect company location → paper format:
-   - US/Canada → `letter`
-   - Rest of world → `a4`
+   - Read `config/geo-regions.yml`, look up `regions.{detected_geo}.paper_format`
+   - If geo-regions.yml is unavailable: US/Canada → `letter`, rest of world → `a4`
 6. Detect role archetype → adapt framing
 7. Rewrite Professional Summary injecting JD keywords + exit narrative bridge ("Built and sold a business. Now applying systems thinking to [JD domain].")
 8. Select top 3-4 projects most relevant to the offer

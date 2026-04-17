@@ -122,11 +122,16 @@ try {
 
 if (!QUICK) {
   console.log('\n4. Dashboard build');
-  const goBuild = run('cd dashboard && go build -o /tmp/career-dashboard-test . 2>&1');
-  if (goBuild !== null) {
-    pass('Dashboard compiles');
+  const hasGo = run('which go 2>/dev/null');
+  if (!hasGo) {
+    warn('Go not installed — skipping dashboard build');
   } else {
-    fail('Dashboard build failed');
+    const goBuild = run('cd dashboard && go build -o /tmp/career-dashboard-test . 2>&1');
+    if (goBuild !== null) {
+      pass('Dashboard compiles');
+    } else {
+      fail('Dashboard build failed');
+    }
   }
 } else {
   console.log('\n4. Dashboard build (skipped --quick)');

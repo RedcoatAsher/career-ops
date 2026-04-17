@@ -1,11 +1,11 @@
 <!-- @include: modes/_shared.md -->
 <!-- @include: modes/_profile.md -->
 
-# Mode: tracker — Applications Tracker (US Pipeline)
+# Mode: tracker — Applications Tracker
 
 Read and display `data/applications.md`.
 
-**This is the US pipeline tracker.** Only show entries with `geo: US` or no geo specified. UK/EMEA roles belong in the co-uk pipeline and should not appear here.
+**Geo filtering:** Read `default_geo` from `config/profile.yml`. If set, only show entries matching that geo (or entries with no geo specified). If no `default_geo` is configured, show all entries. The user can override by asking for a specific geo (e.g. "show UK tracker").
 
 **Format:**
 ```markdown

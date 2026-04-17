@@ -27,6 +27,7 @@ import https from 'https';
 import { readFileSync, existsSync } from 'fs';
 import { resolve, join, relative, isAbsolute } from 'path';
 import { pathToFileURL } from 'url';
+import yaml from 'js-yaml';
 
 // -- Load .env (no dotenv dependency) --
 function loadEnv() {
@@ -47,6 +48,34 @@ const env = loadEnv();
 const API_KEY = process.env.OBSIDIAN_API_KEY ?? env.OBSIDIAN_API_KEY;
 const PORT = 27124;
 
+// -- Load geo-regions config --
+function loadGeoRegions() {
+  const p = resolve('config/geo-regions.yml');
+  if (!existsSync(p)) return null;
+  try {
+    return yaml.load(readFileSync(p, 'utf8'));
+  } catch { return null; }
+}
+
+// -- Read default_geo from profile.yml --
+function getDefaultGeo() {
+  const p = resolve('config/profile.yml');
+  if (!existsSync(p)) return null;
+  try {
+    const prof = yaml.load(readFileSync(p, 'utf8'));
+    return prof?.location?.default_geo ?? null;
+  } catch { return null; }
+}
+
+// -- Resolve geo from folder name by matching obsidian_folder in config --
+function inferGeoFromFolder(folderName, geoConfig) {
+  if (!geoConfig?.regions) return null;
+  for (const [code, region] of Object.entries(geoConfig.regions)) {
+    if (region.obsidian_folder === folderName) return code;
+  }
+  return null;
+}
+
 if (!API_KEY) {
   console.warn('⚠  OBSIDIAN_API_KEY not set — skipping vault sync');
   process.exit(0);
@@ -61,16 +90,32 @@ const get = (flag) => {
 
 const file    = get('--file');
 const content = get('--content');
-const folder  = get('--folder') ?? 'UK Applications';
 
 if (!file || !content) {
   if (args.includes('--auto')) {
     // Called by hook without file/content — nothing to sync, exit silently
     process.exit(0);
   }
-  console.error('Usage: node obsidian-sync.mjs --file "001 - Company.md" --content reports/001-slug.md [--folder "UK Applications"] [options]');
+  console.error('Usage: node obsidian-sync.mjs --file "001 - Company.md" --content reports/001-slug.md [--folder "..."] [--geo CODE] [options]');
   process.exit(1);
 }
+
+// -- Resolve geo and folder from config (data-driven, not hardcoded) --
+const geoRegions = loadGeoRegions();
+const geoArg    = get('--geo');
+const folderArg = get('--folder');
+
+// Resolution chain: --geo arg → infer from --folder → default_geo from profile → config fallback → 'US'
+const geo = geoArg
+  ?? (folderArg ? inferGeoFromFolder(folderArg, geoRegions) : null)
+  ?? getDefaultGeo()
+  ?? geoRegions?.default_fallback
+  ?? 'US';
+
+// Folder: --folder arg → lookup from geo config → generic fallback
+const folder = folderArg
+  ?? geoRegions?.regions?.[geo]?.obsidian_folder
+  ?? `${geo} Applications`;
 
 if (!existsSync(content)) {
   console.error(`Content file not found: ${content}`);
@@ -90,7 +135,6 @@ const url       = get('--url')       ?? '';
 const pdf       = get('--pdf')       ?? 'false';
 const pdfBool   = String(pdf).toLowerCase() === 'true';
 const pdfFile   = get('--pdf-file')  ?? '';
-const geo       = get('--geo')       ?? (folder.startsWith('UK') ? 'UK' : 'US');
 const location  = get('--location')  ?? '';
 const remote    = get('--remote')    ?? '';
 

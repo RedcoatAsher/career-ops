@@ -12,6 +12,34 @@ Classify the offer into one of the 6 archetypes (see `_shared.md`). If hybrid, i
 - How to rewrite the summary in block E
 - Which STAR stories to prepare in block F
 
+## Step 0.5 — Geo Detection
+
+Read `config/geo-regions.yml`. For each region's `detection_signals`, scan the JD text for matches across these signal categories:
+
+1. **Location mentions**: City names, state/province codes, country names from the region's `locations` and `cities` lists
+2. **Currency**: Symbols or codes from `currency_patterns` appearing in compensation sections
+3. **Visa / work authorization**: Phrases from `visa_keywords` (e.g. "H-1B", "right to work in the UK", "Blue Card")
+4. **Regulatory references**: Jurisdiction-specific terms from `regulatory` (e.g. EEOC → US, GDPR → EU, FCA → UK, AGG → DACH)
+5. **Timezone references**: Named timezones matching the region's `timezone_examples`
+
+**Scoring**: Count distinct signal matches per region. The region with the most matches wins. If a sub-region has a `parent` field (e.g. DACH → EU) and both match, prefer the sub-region — it's more specific.
+
+**Confidence levels**:
+- **High** (3+ signals from one region, no competing signals): Use detected geo
+- **Medium** (1-2 signals, or signals from 2+ regions): Use detected geo but note uncertainty in Block A
+- **Low** (no signals or equal match across regions): Fall back to `default_geo` from `config/profile.yml`
+
+**Output**: Set `detected_geo` for use in all subsequent blocks:
+- Block A table: add **Geo** row with detected value and confidence
+- Block D: use the region's `currency` for comp benchmarks
+- Report header: include `**Geo:** {detected_geo}`
+- Post-evaluation: pass `--geo {detected_geo}` to obsidian-sync.mjs
+
+**Edge cases**:
+- "Remote — global" or "remote, anywhere" with no geo signals → use `default_geo` from profile.yml
+- "Remote US" / "Remote UK" → these ARE geo signals (US and UK respectively)
+- JD in a non-English language → still apply signal matching; language-specific signals (e.g. "Deutschland", "Aufenthaltstitel") are included in the config
+
 ## Block A — Role Summary
 
 Table with:
@@ -165,6 +193,7 @@ Save complete evaluation in `reports/{###}-{company-slug}-{YYYY-MM-DD}.md`.
 **Date:** {YYYY-MM-DD}
 **Archetype:** {detected}
 **Score:** {X/5}
+**Geo:** {detected_geo from Step 0.5 — e.g. "US", "UK", "EU", "DACH"}
 **Legitimacy:** {High Confidence | Proceed with Caution | Suspicious}
 **Location:** {city/country from JD — e.g. "San Francisco, CA" or "Remote US"}
 **Remote:** {remote|on-site|unknown}

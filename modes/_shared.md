@@ -152,6 +152,8 @@ If the candidate has a live demo/dashboard (check profile.yml), offer access in 
 
 <!-- [CUSTOMIZE] Adapt to your situation. Read from config/profile.yml → location -->
 
+**Geo detection:** All evaluation modes auto-detect the JD's geography using `config/geo-regions.yml` detection signals (see Step 0.5 in `modes/oferta.md`). The detected geo drives: Obsidian folder routing, paper format (letter vs A4), comp currency, and spelling variant. If detection is ambiguous, the system falls back to `default_geo` from `config/profile.yml`.
+
 **In forms:**
 - Binary "can you be on-site?" questions: follow your actual availability from profile.yml
 - In free-text fields: specify your timezone overlap and availability
