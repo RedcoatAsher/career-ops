@@ -102,6 +102,9 @@ function render({ base, overlay, profile, spelling, geo }) {
     out = applySpelling(out, spelling.swaps ?? {});
   }
 
+  // Strip keep markers from all builds
+  out = out.replace(/<!--\s*keep-start\s*-->/g, '').replace(/<!--\s*keep-end\s*-->/g, '');
+
   return out;
 }
 

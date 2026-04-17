@@ -1,7 +1,7 @@
 # Geo-agnostic profile fields used by cv/build-cv.mjs.
 # Edit these once; they flow into every rendered CV.
 
-full_name: "TODO — full name"
-email: "TODO — email"
-linkedin: "https://linkedin.com/in/TODO"
-portfolio: "https://TODO.com"
+full_name: "Asher Peruscini"
+email: "arperuscini@gmail.com"
+linkedin: "https://linkedin.com/in/asherperuscini"
+portfolio: "https://asher.fika.casa"

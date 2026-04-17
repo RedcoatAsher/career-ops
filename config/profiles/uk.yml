@@ -2,11 +2,10 @@
 # Used at evaluation time (scoring, comp target) and when building UK CVs.
 
 currency: "GBP"
-target_range: "£XXXK–£YYYK"     # TODO: set your UK target total comp
-minimum: "£XXXK"                # TODO: walk-away number
+target_range: "£110K–£500K"
+minimum: "£110K"
 timezone: "Europe/London"
-work_authorization: "UK Citizen / Right to Work UK"
+work_authorization: "UK Citizen"
 locations_open_to:
-  - "Remote UK"
   - "London"
 spelling: en-GB

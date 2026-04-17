@@ -15,6 +15,7 @@ swaps:
   honored: honoured
   labor: labour
   behavior: behaviour
+  behavioral: behavioural
   behaviors: behaviours
   favorite: favourite
   favorites: favourites
@@ -106,6 +107,7 @@ swaps:
   gray: grey
   gray-scale: grey-scale
   grayscale: greyscale
+  traveler: traveller
   traveled: travelled
   traveling: travelling
   canceled: cancelled
