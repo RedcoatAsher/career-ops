@@ -1,0 +1,13 @@
+# US profile — compensation, timezone, work-auth details for the US market.
+# Used at evaluation time (scoring, comp target) and when building US CVs.
+
+currency: "USD"
+target_range: "$XXXK–$YYYK"     # TODO: set your US target total comp
+minimum: "$XXXK"                # TODO: walk-away number
+timezone: "America/New_York"    # TODO: your US time zone
+work_authorization: "US Citizen / Green Card"
+locations_open_to:
+  - "Remote US"
+  - "NYC"
+  - "SF Bay Area"
+spelling: en-US

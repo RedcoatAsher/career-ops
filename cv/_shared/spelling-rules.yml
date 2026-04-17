@@ -1,0 +1,137 @@
+# en-US → en-GB spelling swaps.
+# Applied only when target geo is UK.
+# Case-preserving: replacement runs for exact, Title, and UPPER forms.
+# Add entries as you find new ones — keep the en-US form on the left.
+
+swaps:
+  # -or → -our
+  color: colour
+  colors: colours
+  colored: coloured
+  coloring: colouring
+  flavor: flavour
+  flavors: flavours
+  honor: honour
+  honored: honoured
+  labor: labour
+  behavior: behaviour
+  behaviors: behaviours
+  favorite: favourite
+  favorites: favourites
+  harbor: harbour
+  neighbor: neighbour
+  neighbors: neighbours
+  rumor: rumour
+  humor: humour
+
+  # -ize → -ise
+  organize: organise
+  organized: organised
+  organizing: organising
+  organization: organisation
+  organizations: organisations
+  organizational: organisational
+  optimize: optimise
+  optimized: optimised
+  optimizing: optimising
+  optimization: optimisation
+  optimizations: optimisations
+  prioritize: prioritise
+  prioritized: prioritised
+  prioritizing: prioritising
+  prioritization: prioritisation
+  recognize: recognise
+  recognized: recognised
+  recognizing: recognising
+  realize: realise
+  realized: realised
+  realizing: realising
+  utilize: utilise
+  utilized: utilised
+  utilizing: utilising
+  utilization: utilisation
+  synthesize: synthesise
+  summarize: summarise
+  standardize: standardise
+  standardized: standardised
+  modernize: modernise
+  modernized: modernised
+  modernizing: modernising
+  customize: customise
+  customized: customised
+  customization: customisation
+  personalize: personalise
+  personalized: personalised
+  personalization: personalisation
+  categorize: categorise
+  categorized: categorised
+  specialize: specialise
+  specialized: specialised
+  specialization: specialisation
+  emphasize: emphasise
+  emphasized: emphasised
+
+  # -yze → -yse
+  analyze: analyse
+  analyzed: analysed
+  analyzing: analysing
+  analyzer: analyser
+  paralyze: paralyse
+
+  # -og → -ogue
+  catalog: catalogue
+  catalogs: catalogues
+  dialog: dialogue
+  dialogs: dialogues
+
+  # -er → -re
+  center: centre
+  centers: centres
+  centered: centred
+  meter: metre
+  meters: metres
+  fiber: fibre
+  fibers: fibres
+  theater: theatre
+  liter: litre
+
+  # misc
+  license: licence           # noun in en-GB; verb stays "license"
+  licenses: licences
+  defense: defence
+  defenses: defences
+  offense: offence
+  program: programme         # non-software sense; see KEEP list below
+  check: cheque              # financial instrument only; see KEEP list
+  gray: grey
+  gray-scale: grey-scale
+  grayscale: greyscale
+  traveled: travelled
+  traveling: travelling
+  canceled: cancelled
+  canceling: cancelling
+  modeled: modelled
+  modeling: modelling
+  labeled: labelled
+  labeling: labelling
+  fulfill: fulfil
+  fulfillment: fulfilment
+  enrollment: enrolment
+  installment: instalment
+  judgment: judgement
+
+# Words that look like they'd change but must NOT be swapped.
+# These are typically technical/product nouns where the US form is canonical
+# even in UK English. Rendering skips any match inside this list.
+preserve:
+  - "program"         # when referring to software programs — manual override if needed
+  - "analyzer"        # product names
+  - "Analyze"         # if part of a proper noun / product name
+  - "optimizer"       # technical term
+  - "center"          # when part of a proper noun (e.g., "Customer Center")
+  - "checkbox"
+  - "license key"
+
+# NOTE: the `preserve` list is currently documentation-only.
+# build-cv.mjs respects it via inline `<!-- keep: ... -->` comments
+# in the base markdown — use those for per-occurrence opt-out.

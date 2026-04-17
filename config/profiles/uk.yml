@@ -1,0 +1,12 @@
+# UK profile — compensation, timezone, work-auth details for the UK market.
+# Used at evaluation time (scoring, comp target) and when building UK CVs.
+
+currency: "GBP"
+target_range: "£XXXK–£YYYK"     # TODO: set your UK target total comp
+minimum: "£XXXK"                # TODO: walk-away number
+timezone: "Europe/London"
+work_authorization: "UK Citizen / Right to Work UK"
+locations_open_to:
+  - "Remote UK"
+  - "London"
+spelling: en-GB

@@ -1,0 +1,20 @@
+# Geo overlay — deltas applied on top of base-{role}.md content.
+# Only these three dimensions differ between US and UK CVs.
+
+US:
+  phone: "+1 XXX-XXX-XXXX"       # TODO: set to your US phone
+  citizenship_order:              # order shown on the CV
+    - "US Citizen"
+    - "UK Citizen"
+  spelling: en-US
+  address_line: "City, ST, USA"   # TODO: fill
+  locale_label: "United States"
+
+UK:
+  phone: "+44 XXXX XXXXXX"        # TODO: set to your UK phone
+  citizenship_order:
+    - "UK Citizen"
+    - "US Citizen"
+  spelling: en-GB
+  address_line: "City, UK"        # TODO: fill
+  locale_label: "United Kingdom"
